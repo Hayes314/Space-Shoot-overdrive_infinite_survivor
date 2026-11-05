@@ -2,68 +2,57 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Neon Overdrive: Infinite Survivor</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
         * {
             user-select: none;
             -webkit-user-select: none;
-            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-drag: none;
+        }
+        html, body {
+            overscroll-behavior: none;
+            overflow: hidden;
+            position: fixed;
+            inset: 0;
         }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #030712;
             color: #f3f4f6;
-            overflow: hidden;
         }
         canvas {
             display: block;
             width: 100vw;
             height: 100vh;
+            touch-action: none;
+            -webkit-user-drag: none;
         }
-        .neon-text-cyan {
-            text-shadow: 0 0 10px rgba(6, 182, 212, 0.7), 0 0 20px rgba(6, 182, 212, 0.4);
-        }
-        .neon-text-pink {
-            text-shadow: 0 0 10px rgba(236, 72, 153, 0.7), 0 0 20px rgba(236, 72, 153, 0.4);
-        }
-        .neon-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-        }
-        .upgrade-card {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .upgrade-card:hover {
-            transform: translateY(-4px) scale(1.02);
-            border-color: rgba(6, 182, 212, 0.8);
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
-        }
-        /* Custom scrollbar for codex modal */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(56, 189, 248, 0.4);
-            border-radius: 4px;
+        .neon-text-cyan { text-shadow: 0 0 10px rgba(6,182,212,.7), 0 0 20px rgba(6,182,212,.4); }
+        .neon-text-pink { text-shadow: 0 0 10px rgba(236,72,153,.7), 0 0 20px rgba(236,72,153,.4); }
+        .neon-card { background: rgba(15,23,42,.85); backdrop-filter: blur(12px); border: 1px solid rgba(56,189,248,.25); box-shadow: 0 8px 32px 0 rgba(0,0,0,.5); }
+        .upgrade-card { transition: all .2s cubic-bezier(.4,0,.2,1); }
+        .upgrade-card:hover { transform: translateY(-4px) scale(1.02); border-color: rgba(6,182,212,.8); box-shadow: 0 0 20px rgba(6,182,212,.4); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15,23,42,.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(56,189,248,.4); border-radius: 4px; }
+
+        .overflow-y-auto,
+        textarea,
+        #saveCodeInput {
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
     </style>
 </head>
 <body class="relative w-screen h-screen overflow-hidden select-none">
 
-    <!-- Game Canvas -->
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="gameCanvas" draggable="false"></canvas>
 
-    <!-- Top Floating Controller Bar -->
     <div id="topBar" class="absolute top-4 right-4 z-20 flex items-center space-x-2">
         <button id="langToggleBtn" class="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-bold text-cyan-400 transition cursor-pointer backdrop-blur-md">
             🌐 <span id="langText">EN</span>
@@ -79,23 +68,17 @@
         </button>
     </div>
 
-    <!-- HUD Overlay -->
-    <div id="hud" class="absolute inset-x-0 top-0 p-4 pointer-events-none z-10 flex flex-col space-y-2 hidden">
+    <div id="hud" class="absolute inset-x-0 top-14 px-4 pointer-events-none z-10 flex flex-col space-y-2 hidden">
         <div class="flex justify-between items-center max-w-4xl mx-auto w-full">
-            <!-- Health & XP Bars -->
             <div class="flex flex-col space-y-1.5 w-48 sm:w-64">
-                <!-- Health Bar -->
                 <div class="relative w-full h-4 bg-slate-900/80 border border-emerald-500/40 rounded-full overflow-hidden p-0.5">
                     <div id="hpFill" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-150 w-full"></div>
                     <div id="hpText" class="absolute inset-0 flex items-center justify-center text-[10px] font-extrabold text-white tracking-widest drop-shadow">100 / 100</div>
                 </div>
-                <!-- XP Bar -->
                 <div class="relative w-full h-2.5 bg-slate-900/80 border border-cyan-500/40 rounded-full overflow-hidden p-0.5">
                     <div id="xpFill" class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-150 w-0"></div>
                 </div>
             </div>
-
-            <!-- Level & Score Counter -->
             <div class="flex items-center space-x-4">
                 <div class="text-right">
                     <div class="text-[10px] text-slate-400 font-extrabold tracking-wider uppercase" id="labelScore">SCORE</div>
@@ -107,21 +90,17 @@
                 </div>
             </div>
         </div>
-
-        <!-- Auto-save notification badge -->
         <div id="autoSaveBadge" class="self-center bg-slate-900/80 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-amber-400 opacity-0 transition-opacity duration-300">
             💾 <span id="autoSaveText">自動儲存中...</span>
         </div>
     </div>
 
-    <!-- Boss Warning Banner -->
     <div id="bossBanner" class="absolute top-1/4 inset-x-0 z-20 flex flex-col items-center justify-center pointer-events-none hidden">
         <div class="bg-rose-950/80 border-y-2 border-rose-500 w-full py-2 text-center backdrop-blur-md animate-pulse">
             <h2 id="bossText" class="text-2xl sm:text-3xl font-black text-rose-500 tracking-widest neon-text-pink">⚠️ WARNING: DREADNOUGHT BOSS SPAWNED ⚠️</h2>
         </div>
     </div>
 
-    <!-- Start Overlay Screen -->
     <div id="startOverlay" class="absolute inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
         <div class="neon-card p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center space-y-6 border border-cyan-500/30">
             <div>
@@ -133,7 +112,12 @@
                 </p>
             </div>
 
-            <!-- Difficulty Selector -->
+            <div class="flex justify-center">
+                <button id="startLangBtn" class="px-5 py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-bold text-cyan-400 transition cursor-pointer backdrop-blur-md">
+                    🌐 <span id="startLangText">EN</span>
+                </button>
+            </div>
+
             <div class="space-y-2">
                 <label id="labelDifficulty" class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Select Difficulty</label>
                 <div class="grid grid-cols-3 gap-2">
@@ -149,17 +133,13 @@
                 </div>
             </div>
 
-            <!-- Action Buttons -->
             <div class="space-y-3 pt-2">
-                <!-- Continue Auto-Save Game Button -->
                 <button id="continueBtn" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg transition cursor-pointer hidden uppercase tracking-wider">
                     ▶️ <span id="continueBtnText">繼續遊戲 (Auto-Save)</span>
                 </button>
-                
                 <button id="startButton" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-base rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.5)] transition transform active:scale-95 cursor-pointer uppercase tracking-wider">
                     ⚡ <span id="startBtnText">開始遊戲</span>
                 </button>
-
                 <div class="grid grid-cols-2 gap-3">
                     <button id="howToPlayBtn" class="py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer">
                         📖 <span id="howToPlayBtnText">玩法與敵方檔案</span>
@@ -172,30 +152,29 @@
 
             <div class="text-[11px] text-slate-500 pt-2 border-t border-slate-800/80 flex justify-between items-center">
                 <span>Highest Score: <strong id="bestScoreText" class="text-cyan-400">0</strong></span>
-                <span>WSAD / Drag to Move</span>
+                <span>WASD / Tap to Move</span>
             </div>
         </div>
     </div>
 
-    <!-- How to Play & Codex Modal -->
     <div id="howToPlayModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
         <div class="neon-card p-6 rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col border border-cyan-500/30">
-            <h2 id="codexTitle" class="text-xl font-black text-cyan-400 text-center mb-4">玩法指南與敵方檔案</h2>
-            
-            <div class="overflow-y-auto space-y-4 pr-1 text-xs leading-relaxed text-slate-300 flex-1">
+            <h2 id="codexTitle" class="text-xl font-black text-cyan-400 text-center mb-4 shrink-0">玩法指南與敵方檔案</h2>
+            <div class="overflow-y-auto space-y-4 pr-1 text-xs leading-relaxed text-slate-300 flex-1 min-h-0">
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideControlsTitle" class="font-bold text-cyan-300">🎮 操作說明</h3>
-                    <p id="guideControlsDesc">電腦玩家可使用 WASD 或 方向鍵 移動；行動裝置玩家直接在畫面上拖曳操作。核心會自動瞄準最近的敵人發射雷射炮。</p>
+                    <p id="guideControlsDesc">電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：搖桿平常位於畫面右下角，按下螢幕任意位置時搖桿會立即傳送到該處，按住拖動即可控制方向，放開後搖桿自動回到右側。核心會自動瞄準最近的敵人發射雷射炮。</p>
                 </div>
-                
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideUpgradesTitle" class="font-bold text-amber-300">⭐ 無限疊加升級</h3>
                     <p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！</p>
                 </div>
-
+                <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
+                    <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 動態難度與獎勵</h3>
+                    <p id="guideScalingDesc">你的等級越高，敵人的生命與速度會稍微提升（但不至於失控），同時擊殺掉落的經驗水晶也會變多，讓你維持爽快的升級節奏。</p>
+                </div>
                 <div class="space-y-2">
                     <h3 id="codexEnemiesTitle" class="font-bold text-rose-400 uppercase tracking-wider text-[11px]">👾 敵方威脅圖鑑</h3>
-                    
                     <div class="grid grid-cols-1 gap-2">
                         <div class="p-2.5 bg-slate-900/40 rounded-lg border border-red-500/20 flex items-start space-x-3">
                             <span class="text-lg">🔴</span>
@@ -204,7 +183,6 @@
                                 <p id="enemyChaserDesc" class="text-[11px] text-slate-400">數量眾多的基礎攻擊單位，會直線蜂擁向玩家。</p>
                             </div>
                         </div>
-
                         <div class="p-2.5 bg-slate-900/40 rounded-lg border border-amber-500/20 flex items-start space-x-3">
                             <span class="text-lg">🟠</span>
                             <div>
@@ -212,7 +190,6 @@
                                 <p id="enemySpeederDesc" class="text-[11px] text-slate-400">生命值較低但移動速度極快，考量玩家反應速度。</p>
                             </div>
                         </div>
-
                         <div class="p-2.5 bg-slate-900/40 rounded-lg border border-purple-500/20 flex items-start space-x-3">
                             <span class="text-lg">🟣</span>
                             <div>
@@ -220,7 +197,6 @@
                                 <p id="enemySplitterDesc" class="text-[11px] text-slate-400">體型較大，被擊破時會迅速分裂成兩個高速小裂變體。</p>
                             </div>
                         </div>
-
                         <div class="p-2.5 bg-slate-900/40 rounded-lg border border-teal-500/20 flex items-start space-x-3">
                             <span class="text-lg">🔷</span>
                             <div>
@@ -228,7 +204,6 @@
                                 <p id="enemySniperDesc" class="text-[11px] text-slate-400">會與玩家保持距離，並定期發射高速能量彈幕。</p>
                             </div>
                         </div>
-
                         <div class="p-2.5 bg-slate-900/40 rounded-lg border border-emerald-500/20 flex items-start space-x-3">
                             <span class="text-lg">🟩</span>
                             <div>
@@ -239,19 +214,15 @@
                     </div>
                 </div>
             </div>
-
-            <button id="closeGuideBtn" class="w-full mt-4 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs rounded-xl transition shadow uppercase cursor-pointer">
+            <button id="closeGuideBtn" class="w-full mt-4 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs rounded-xl transition shadow uppercase cursor-pointer shrink-0">
                 <span id="closeGuideBtnText">關閉圖鑑</span>
             </button>
         </div>
     </div>
 
-    <!-- Quit Confirmation Modal -->
     <div id="quitModal" class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
         <div class="neon-card p-6 rounded-2xl max-w-sm w-full text-center space-y-4 border border-rose-500/40">
-            <div class="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center mx-auto text-rose-400 text-xl font-bold">
-                ⚠️
-            </div>
+            <div class="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center mx-auto text-rose-400 text-xl font-bold">⚠️</div>
             <div>
                 <h2 id="quitModalTitle" class="text-xl font-black text-rose-400">確定退出遊戲？</h2>
                 <p id="quitModalDesc" class="text-xs text-slate-400 mt-1">未複製存檔碼的當前進度將會遺失。</p>
@@ -267,14 +238,15 @@
         </div>
     </div>
 
-    <!-- Pause & Save Modal -->
     <div id="pauseModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md hidden">
         <div class="neon-card p-6 rounded-3xl max-w-sm w-full text-center space-y-4 border border-cyan-500/30">
             <h2 id="pauseTitle" class="text-2xl font-black text-white tracking-wider">遊戲暫停</h2>
-            
             <div class="space-y-2 pt-2">
                 <button id="resumeGameBtn" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs rounded-xl transition cursor-pointer uppercase">
                     ▶️ <span id="resumeBtnText">繼續遊戲</span>
+                </button>
+                <button id="localSaveBtn" class="w-full py-3 bg-slate-900 border border-emerald-500/40 hover:bg-emerald-950/30 text-emerald-400 font-bold text-xs rounded-xl transition cursor-pointer uppercase">
+                    💾 <span id="localSaveBtnText">快速保存到本地</span>
                 </button>
                 <button id="copySaveCodeBtn" class="w-full py-3 bg-slate-900 border border-amber-500/40 hover:bg-amber-950/30 text-amber-400 font-bold text-xs rounded-xl transition cursor-pointer uppercase">
                     📋 <span id="copyCodeBtnText">複製文字存檔碼</span>
@@ -289,7 +261,6 @@
         </div>
     </div>
 
-    <!-- Load Save Code Modal -->
     <div id="loadModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
         <div class="neon-card p-6 rounded-3xl max-w-sm w-full space-y-4 border border-amber-500/30">
             <h2 id="loadModalTitle" class="text-xl font-black text-amber-400 text-center">貼上存檔碼</h2>
@@ -305,27 +276,22 @@
         </div>
     </div>
 
-    <!-- Level Up Selection Modal -->
     <div id="levelUpModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden">
         <div class="max-w-md w-full space-y-4 text-center">
             <div>
                 <span class="text-xs font-black tracking-widest text-cyan-400 uppercase">SYSTEM OVERDRIVE</span>
                 <h2 id="levelUpTitle" class="text-2xl sm:text-3xl font-black text-white neon-text-cyan">選擇加成能力</h2>
             </div>
-            <div id="upgradeCardsContainer" class="grid grid-cols-1 gap-3">
-                <!-- Dynamic cards inserted here -->
-            </div>
+            <div id="upgradeCardsContainer" class="grid grid-cols-1 gap-3"></div>
         </div>
     </div>
 
-    <!-- Game Over Overlay Screen -->
     <div id="gameOverModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md hidden">
         <div class="neon-card p-8 rounded-3xl max-w-sm w-full text-center space-y-6 border border-rose-500/40">
             <div>
                 <h2 id="gameOverTitle" class="text-3xl font-black text-rose-500 neon-text-pink">核心已毀損</h2>
                 <p id="gameOverSub" class="text-xs text-slate-400 mt-1">CORE OVERDRIVE TERMINATED</p>
             </div>
-
             <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-2">
                 <div class="flex justify-between text-xs">
                     <span class="text-slate-400" id="finalScoreLabel">最終得分:</span>
@@ -336,16 +302,44 @@
                     <strong id="finalKills" class="text-amber-400">0</strong>
                 </div>
             </div>
-
             <button id="restartBtn" class="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-black text-sm rounded-2xl shadow-lg transition transform active:scale-95 cursor-pointer uppercase tracking-wider">
                 🔄 <span id="restartBtnText">重新開始</span>
             </button>
         </div>
     </div>
 
-    <!-- Main Game Logic Script -->
     <script>
-        // Setup Web Audio API Synthesizer
+        /* =========================================================
+           防止拖拽 / 右键菜单 / 缩放；但允许可滚动容器正常滚动
+           ========================================================= */
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        window.addEventListener('dragstart', e => e.preventDefault());
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(evt => {
+            document.addEventListener(evt, e => e.preventDefault(), { passive: false });
+        });
+
+        document.addEventListener('touchmove', e => {
+            if (e.target === canvas) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        /* ---------------- 平衡参数（爽游：玩家成长远快于敌人） ---------------- */
+        const BALANCE = {
+            // 敌人每级血量增幅
+            enemyHpPerLevel: 0.06,
+            // 敌人每级速度增幅
+            enemySpeedPerLevel: 0.012,
+            // 敌人速度增幅上限
+            enemySpeedCap: 1.35,
+            // 掉落经验每级增幅
+            gemXpPerLevel: 0.14,
+            // 敌人数量随等级轻微增加上限（最多 +40%）
+            spawnRateLvBoostCap: 0.40
+        };
+
+        /* ---------------- AUDIO ---------------- */
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -357,7 +351,6 @@
         function playSound(type) {
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
-
             if (type === 'shoot') {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -366,10 +359,8 @@
                 osc.frequency.exponentialRampToValueAtTime(100, now + 0.08);
                 gain.gain.setValueAtTime(0.12, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.08);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.08);
             } else if (type === 'hit') {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -378,10 +369,8 @@
                 osc.frequency.exponentialRampToValueAtTime(30, now + 0.05);
                 gain.gain.setValueAtTime(0.1, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.05);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.05);
             } else if (type === 'explosion') {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -390,23 +379,18 @@
                 osc.frequency.exponentialRampToValueAtTime(20, now + 0.25);
                 gain.gain.setValueAtTime(0.3, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.25);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.25);
             } else if (type === 'levelup') {
-                const notes = [400, 600, 800, 1200];
-                notes.forEach((freq, i) => {
+                [400, 600, 800, 1200].forEach((freq, i) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(freq, now + i * 0.06);
                     gain.gain.setValueAtTime(0.15, now + i * 0.06);
                     gain.gain.linearRampToValueAtTime(0.01, now + i * 0.06 + 0.1);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now + i * 0.06);
-                    osc.stop(now + i * 0.06 + 0.1);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.06); osc.stop(now + i * 0.06 + 0.1);
                 });
             } else if (type === 'boss') {
                 const osc = audioCtx.createOscillator();
@@ -416,14 +400,12 @@
                 osc.frequency.linearRampToValueAtTime(40, now + 0.6);
                 gain.gain.setValueAtTime(0.3, now);
                 gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.6);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.6);
             }
         }
 
-        // Global State & UI Elements
+        /* ---------------- STATE ---------------- */
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -433,127 +415,86 @@
         let difficulty = 'normal';
 
         let score = 0;
-        let highScore = parseInt(localStorage.getItem('neon_high_score') || '0');
+        let highScore = parseInt(localStorage.getItem('neon_high_score') || '0', 10);
         let gameTime = 0;
         let totalKills = 0;
         let lastBossTime = 0;
         let autoSaveTimer = 0;
 
-        // Entities arrays
-        let player;
+        let player = null;
         let bullets = [];
         let enemyBullets = [];
         let enemies = [];
         let particles = [];
         let gems = [];
 
-        // Language Dictionary
+        /* ---------------- I18N ---------------- */
         const I18N = {
             'zh-Hant': {
-                'subTitle': '無限肉鴿生存戰',
-                'labelDifficulty': '選擇遊戲難度',
-                'diffEasyText': '簡單',
-                'diffNormalText': '普通',
-                'diffHardText': '超頻狂暴',
-                'startBtnText': '開始遊戲',
-                'continueBtnText': '繼續遊戲 (Auto-Save)',
-                'howToPlayBtnText': '玩法與敵方檔案',
-                'loadBtnText': '貼上存檔碼',
-                'labelScore': '分數:',
-                'labelBest': '最高:',
-                'pauseBtnText': '暫停',
-                'saveBtnText': '存檔碼',
-                'quitBtnText': '退出',
-                'autoSaveText': '自動儲存中...',
-                'bossText': '⚠️ 警告：無盡霸主 Boss 已登場 ⚠️',
-                'codexTitle': '玩法指南與敵方檔案',
-                'guideControlsTitle': '🎮 操作說明',
-                'guideControlsDesc': '電腦玩家可使用 WASD 或 方向鍵 移動；行動裝置玩家直接在畫面上拖曳操作。核心會自動瞄準最近的敵人發射雷射炮。',
-                'guideUpgradesTitle': '⭐ 無限疊加升級',
-                'guideUpgradesDesc': '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！',
-                'codexEnemiesTitle': '👾 敵方威脅圖鑑',
-                'enemyChaserTitle': 'Chaser (追擊者)',
-                'enemyChaserDesc': '數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',
-                'enemySpeederTitle': 'Speeder (疾速突擊者)',
-                'enemySpeederDesc': '生命值較低但移動速度極快，考量玩家反應速度。',
-                'enemySplitterTitle': 'Splitter (裂變體)',
-                'enemySplitterDesc': '體型較大，被擊破時會迅速分裂成兩個高速小裂變體。',
-                'enemySniperTitle': 'Sniper (遠程狙擊手)',
-                'enemySniperDesc': '會與玩家保持距離，並定期發射高速能量彈幕。',
-                'enemyTankTitle': 'Tank (重裝坦克)',
-                'enemyTankDesc': '擁有龐大生命值與防禦，能阻擋大量的火力發射。',
-                'closeGuideBtnText': '關閉圖鑑',
-                'quitModalTitle': '確定退出遊戲？',
-                'quitModalDesc': '未複製存檔碼的當前進度將會遺失。',
-                'cancelQuitBtnText': '取消',
-                'confirmQuitBtnText': '確定退出',
-                'pauseTitle': '遊戲暫停',
-                'resumeBtnText': '繼續遊戲',
-                'copyCodeBtnText': '複製文字存檔碼',
-                'restartBtnText': '重新開始',
-                'pauseQuitBtnText': '退出主選單',
-                'loadModalTitle': '貼上存檔碼',
-                'cancelLoadBtnText': '取消',
-                'confirmLoadBtnText': '載入進度',
-                'levelUpTitle': '選擇加成能力',
-                'gameOverTitle': '核心已毀損',
-                'finalScoreLabel': '最終得分:',
-                'finalKillsLabel': '擊殺數量:'
+                subTitle: '無限肉鴿生存戰', labelDifficulty: '選擇遊戲難度',
+                diffEasyText: '簡單', diffNormalText: '普通', diffHardText: '超頻狂暴',
+                startBtnText: '開始遊戲', continueBtnText: '繼續遊戲 (Auto-Save)',
+                howToPlayBtnText: '玩法與敵方檔案', loadBtnText: '貼上存檔碼',
+                labelScore: '分數:', labelBest: '最高:',
+                pauseBtnText: '暫停', saveBtnText: '存檔碼', quitBtnText: '退出',
+                autoSaveText: '自動儲存中...', bossText: '⚠️ 警告：無盡霸主 Boss 已登場 ⚠️',
+                codexTitle: '玩法指南與敵方檔案',
+                guideControlsTitle: '🎮 操作說明',
+                guideControlsDesc: '電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：搖桿平常位於畫面右下角，按下螢幕任意位置時搖桿會立即傳送到該處，按住拖動即可控制方向，放開後搖桿自動回到右側。核心會自動瞄準最近的敵人發射雷射炮。',
+                guideUpgradesTitle: '⭐ 無限疊加升級',
+                guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！',
+                guideScalingTitle: '📈 動態難度與獎勵',
+                guideScalingDesc: '你的等級越高，敵人的生命與速度會稍微提升（但不至於失控），同時擊殺掉落的經驗水晶也會變多，讓你維持爽快的升級節奏。',
+                codexEnemiesTitle: '👾 敵方威脅圖鑑',
+                enemyChaserTitle: 'Chaser (追擊者)', enemyChaserDesc: '數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',
+                enemySpeederTitle: 'Speeder (疾速突擊者)', enemySpeederDesc: '生命值較低但移動速度極快，考量玩家反應速度。',
+                enemySplitterTitle: 'Splitter (裂變體)', enemySplitterDesc: '體型較大，被擊破時會迅速分裂成兩個高速小裂變體。',
+                enemySniperTitle: 'Sniper (遠程狙擊手)', enemySniperDesc: '會與玩家保持距離，並定期發射高速能量彈幕。',
+                enemyTankTitle: 'Tank (重裝坦克)', enemyTankDesc: '擁有龐大生命值與防禦，能阻擋大量的火力發射。',
+                closeGuideBtnText: '關閉圖鑑',
+                quitModalTitle: '確定退出遊戲？', quitModalDesc: '未複製存檔碼的當前進度將會遺失。',
+                cancelQuitBtnText: '取消', confirmQuitBtnText: '確定退出',
+                pauseTitle: '遊戲暫停', resumeBtnText: '繼續遊戲',
+                localSaveBtnText: '快速保存到本地',
+                copyCodeBtnText: '複製文字存檔碼', restartBtnText: '重新開始', pauseQuitBtnText: '退出主選單',
+                loadModalTitle: '貼上存檔碼', cancelLoadBtnText: '取消', confirmLoadBtnText: '載入進度',
+                levelUpTitle: '選擇加成能力',
+                gameOverTitle: '核心已毀損', finalScoreLabel: '最終得分:', finalKillsLabel: '擊殺數量:'
             },
             'en': {
-                'subTitle': 'Infinite Roguelike Survivor',
-                'labelDifficulty': 'Select Difficulty',
-                'diffEasyText': 'EASY',
-                'diffNormalText': 'NORMAL',
-                'diffHardText': 'OVERDRIVE',
-                'startBtnText': 'START GAME',
-                'continueBtnText': 'CONTINUE (Auto-Save)',
-                'howToPlayBtnText': 'Codex & Manual',
-                'loadBtnText': 'LOAD SAVE CODE',
-                'labelScore': 'SCORE:',
-                'labelBest': 'BEST:',
-                'pauseBtnText': 'PAUSE',
-                'saveBtnText': 'SAVE CODE',
-                'quitBtnText': 'QUIT',
-                'autoSaveText': 'Auto-Saving...',
-                'bossText': '⚠️ WARNING: DREADNOUGHT BOSS SPAWNED ⚠️',
-                'codexTitle': 'Manual & Enemy Codex',
-                'guideControlsTitle': '🎮 Controls Guide',
-                'guideControlsDesc': 'Use WASD / Arrow Keys on PC or drag directly on Touch Devices to move. Core auto-targets the nearest enemy.',
-                'guideUpgradesTitle': '⭐ Stackable Upgrades',
-                'guideUpgradesDesc': 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely!',
-                'codexEnemiesTitle': '👾 Enemy Threats Codex',
-                'enemyChaserTitle': 'Chaser',
-                'enemyChaserDesc': 'Basic chasers that swarm directly towards the core.',
-                'enemySpeederTitle': 'Speeder',
-                'enemySpeederDesc': 'Fast moving low-HP harassers requiring quick reflexes.',
-                'enemySplitterTitle': 'Splitter',
-                'enemySplitterDesc': 'Splits into two mini splitters upon destruction.',
-                'enemySniperTitle': 'Sniper',
-                'enemySniperDesc': 'Keeps distance and fires high-velocity laser rounds.',
-                'enemyTankTitle': 'Tank',
-                'enemyTankDesc': 'High durability brute that tanks oncoming bullets.',
-                'closeGuideBtnText': 'Close Codex',
-                'quitModalTitle': 'QUIT GAME?',
-                'quitModalDesc': 'Unsaved progress will be lost.',
-                'cancelQuitBtnText': 'Cancel',
-                'confirmQuitBtnText': 'Confirm Quit',
-                'pauseTitle': 'GAME PAUSED',
-                'resumeBtnText': 'RESUME',
-                'copyCodeBtnText': 'COPY SAVE CODE',
-                'restartBtnText': 'RESTART',
-                'pauseQuitBtnText': 'QUIT TO MENU',
-                'loadModalTitle': 'PASTE SAVE CODE',
-                'cancelLoadBtnText': 'Cancel',
-                'confirmLoadBtnText': 'LOAD PROGRESS',
-                'levelUpTitle': 'CHOOSE AN UPGRADE',
-                'gameOverTitle': 'CORE TERMINATED',
-                'finalScoreLabel': 'Final Score:',
-                'finalKillsLabel': 'Total Kills:'
+                subTitle: 'Infinite Roguelike Survivor', labelDifficulty: 'Select Difficulty',
+                diffEasyText: 'EASY', diffNormalText: 'NORMAL', diffHardText: 'OVERDRIVE',
+                startBtnText: 'START GAME', continueBtnText: 'CONTINUE (Auto-Save)',
+                howToPlayBtnText: 'Codex & Manual', loadBtnText: 'LOAD SAVE CODE',
+                labelScore: 'SCORE:', labelBest: 'BEST:',
+                pauseBtnText: 'PAUSE', saveBtnText: 'SAVE CODE', quitBtnText: 'QUIT',
+                autoSaveText: 'Auto-Saving...', bossText: '⚠️ WARNING: DREADNOUGHT BOSS SPAWNED ⚠️',
+                codexTitle: 'Manual & Enemy Codex',
+                guideControlsTitle: '🎮 Controls Guide',
+                guideControlsDesc: 'PC: use WASD / Arrow Keys. Touch: the joystick rests at the bottom-right; press anywhere on screen and it instantly teleports to your finger, drag to steer, release and it returns to the right. The core auto-targets the nearest enemy.',
+                guideUpgradesTitle: '⭐ Stackable Upgrades',
+                guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely!',
+                guideScalingTitle: '📈 Dynamic Scaling & Rewards',
+                guideScalingDesc: 'As your level rises, enemies gain a little more HP and speed (never overwhelming), and defeated enemies drop more XP — keeping that satisfying power-fantasy loop going.',
+                codexEnemiesTitle: '👾 Enemy Threats Codex',
+                enemyChaserTitle: 'Chaser', enemyChaserDesc: 'Basic chasers that swarm directly towards the core.',
+                enemySpeederTitle: 'Speeder', enemySpeederDesc: 'Fast moving low-HP harassers requiring quick reflexes.',
+                enemySplitterTitle: 'Splitter', enemySplitterDesc: 'Splits into two mini splitters upon destruction.',
+                enemySniperTitle: 'Sniper', enemySniperDesc: 'Keeps distance and fires high-velocity laser rounds.',
+                enemyTankTitle: 'Tank', enemyTankDesc: 'High durability brute that tanks oncoming bullets.',
+                closeGuideBtnText: 'Close Codex',
+                quitModalTitle: 'QUIT GAME?', quitModalDesc: 'Unsaved progress will be lost.',
+                cancelQuitBtnText: 'Cancel', confirmQuitBtnText: 'Confirm Quit',
+                pauseTitle: 'GAME PAUSED', resumeBtnText: 'RESUME',
+                localSaveBtnText: 'Quick Save Locally',
+                copyCodeBtnText: 'COPY SAVE CODE', restartBtnText: 'RESTART', pauseQuitBtnText: 'QUIT TO MENU',
+                loadModalTitle: 'PASTE SAVE CODE', cancelLoadBtnText: 'Cancel', confirmLoadBtnText: 'LOAD PROGRESS',
+                levelUpTitle: 'CHOOSE AN UPGRADE',
+                gameOverTitle: 'CORE TERMINATED', finalScoreLabel: 'Final Score:', finalKillsLabel: 'Total Kills:'
             }
         };
 
-        // DOM Elements
+        /* ---------------- DOM ---------------- */
         const startOverlay = document.getElementById('startOverlay');
         const hud = document.getElementById('hud');
         const bossBanner = document.getElementById('bossBanner');
@@ -565,7 +506,6 @@
         const quitModal = document.getElementById('quitModal');
         const autoSaveBadge = document.getElementById('autoSaveBadge');
 
-        // Buttons
         const startButton = document.getElementById('startButton');
         const continueBtn = document.getElementById('continueBtn');
         const pauseBtn = document.getElementById('pauseBtn');
@@ -585,26 +525,163 @@
         const confirmLoadBtn = document.getElementById('confirmLoadBtn');
         const saveCodeInput = document.getElementById('saveCodeInput');
         const restartBtn = document.getElementById('restartBtn');
+        const localSaveBtn = document.getElementById('localSaveBtn');
 
-        // Resize Canvas dynamically
+        /* =========================================================
+           摇杆：默认停在右下角；按下时“传送”到按下的位置；
+           放开后自动回到右侧。
+           ========================================================= */
+        const joystick = {
+            baseX: 0, baseY: 0, knobX: 0, knobY: 0,
+            radius: 60, active: false, touchId: null, mouse: false,
+            dx: 0, dy: 0, atDefault: true, appearT: 0
+        };
+
+        function getDefaultJoystickPos() {
+            return {
+                x: Math.max(100, canvas.width - 100),
+                y: Math.max(100, canvas.height - 100)
+            };
+        }
+
+        function updateJoystickBase() {
+            if (joystick.active) return;
+            const p = getDefaultJoystickPos();
+            joystick.baseX = p.x;
+            joystick.baseY = p.y;
+            joystick.knobX = p.x;
+            joystick.knobY = p.y;
+            joystick.atDefault = true;
+        }
+
+        function resetJoystick() {
+            joystick.active = false;
+            joystick.touchId = null;
+            joystick.mouse = false;
+            joystick.dx = 0;
+            joystick.dy = 0;
+            const p = getDefaultJoystickPos();
+            joystick.baseX = p.x;
+            joystick.baseY = p.y;
+            joystick.knobX = p.x;
+            joystick.knobY = p.y;
+            joystick.atDefault = true;
+        }
+
+        function teleportJoystickTo(x, y) {
+            joystick.active = true;
+            joystick.atDefault = false;
+            joystick.baseX = x;
+            joystick.baseY = y;
+            joystick.knobX = x;
+            joystick.knobY = y;
+            joystick.dx = 0;
+            joystick.dy = 0;
+            joystick.appearT = 1;
+        }
+
+        function updateJoystickFromPoint(cx, cy) {
+            let dx = cx - joystick.baseX;
+            let dy = cy - joystick.baseY;
+            const dist = Math.hypot(dx, dy);
+            const maxR = joystick.radius;
+            if (dist > maxR) {
+                dx = dx / dist * maxR;
+                dy = dy / dist * maxR;
+            }
+            joystick.knobX = joystick.baseX + dx;
+            joystick.knobY = joystick.baseY + dy;
+            joystick.dx = dx / maxR;
+            joystick.dy = dy / maxR;
+        }
+
+        function isUIElement(el) {
+            if (!el || !el.closest) return false;
+            return !!(el.closest('button') || el.closest('textarea') || el.closest('input') ||
+                      el.closest('#topBar') || el.closest('.neon-card'));
+        }
+
+        function isScrollableTarget(el) {
+            if (!el || !el.closest) return false;
+            if (el.closest('textarea') || el.closest('input')) return true;
+            const scroller = el.closest('.overflow-y-auto');
+            if (scroller) return scroller.scrollHeight > scroller.clientHeight;
+            return false;
+        }
+
+        function drawJoystick() {
+            if (!isGameRunning || !player) return;
+            const j = joystick;
+
+            if (j.appearT > 0) j.appearT = Math.max(0, j.appearT - 0.08);
+            const scale = j.active ? (1.0 + j.appearT * 0.15) : 0.85;
+            const r = j.radius * scale;
+
+            ctx.save();
+
+            ctx.beginPath();
+            ctx.arc(j.baseX, j.baseY, r, 0, Math.PI * 2);
+            ctx.fillStyle = j.active ? 'rgba(15, 23, 42, 0.55)' : 'rgba(15, 23, 42, 0.35)';
+            ctx.fill();
+            ctx.strokeStyle = j.active ? 'rgba(56, 189, 248, 0.75)' : 'rgba(56, 189, 248, 0.35)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(j.baseX, j.baseY, r * 0.55, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(j.knobX, j.knobY, r * 0.42, 0, Math.PI * 2);
+            ctx.fillStyle = j.active ? 'rgba(6, 182, 212, 0.9)' : 'rgba(6, 182, 212, 0.4)';
+            ctx.shadowColor = '#06b6d4';
+            ctx.shadowBlur = j.active ? 20 : 8;
+            ctx.fill();
+
+            if (!j.active) {
+                ctx.beginPath();
+                ctx.arc(j.baseX, j.baseY, r + 6 + Math.sin(performance.now() / 400) * 3, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(6, 182, 212, 0.18)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        /* ---------------- 画布尺寸 ---------------- */
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            if (!joystick.active) updateJoystickBase();
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+        updateJoystickBase();
 
-        // Language Translation Handler
         function applyLanguage() {
             const dict = I18N[currentLang];
-            document.getElementById('langText').innerText = currentLang === 'zh-Hant' ? 'EN' : '繁中';
-            for (let id in dict) {
+            const langLabel = currentLang === 'zh-Hant' ? 'EN' : '繁中';
+
+            const langTextEl = document.getElementById('langText');
+            if (langTextEl) langTextEl.innerText = langLabel;
+
+            const startLangTextEl = document.getElementById('startLangText');
+            if (startLangTextEl) startLangTextEl.innerText = langLabel;
+
+            for (const id in dict) {
                 const el = document.getElementById(id);
                 if (el) el.innerText = dict[id];
             }
         }
 
-        // Concentric Circle Player Class
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh-Hant' ? 'en' : 'zh-Hant';
+            applyLanguage();
+        }
+
+        /* ---------------- PLAYER ---------------- */
         class Player {
             constructor() {
                 this.x = canvas.width / 2;
@@ -614,62 +691,53 @@
                 this.hp = 100;
                 this.speed = 4.2;
 
-                // Base Stats
                 this.level = 1;
                 this.xp = 0;
                 this.nextXp = 10;
+                this.pendingLevelUps = 0;
+
                 this.damage = 25;
-                this.fireRate = 4.0; // Shots per second
+                this.fireRate = 4.0;
                 this.lastShotTime = 0;
+                this.lastDroneShotTime = 0;
                 this.multishot = 1;
                 this.bulletSize = 5;
                 this.magnetRadius = 120;
 
-                // Stackable Special Upgrades
-                this.drones = 0;       // Number of orbiting drones
-                this.blades = 0;       // Number of orbiting blades
+                this.drones = 0;
+                this.blades = 0;
                 this.bladeAngle = 0;
 
                 this.hitFlash = 0;
             }
 
-            update(dt, keys, touchPos) {
-                // Keyboard Movement
-                let dx = 0;
-                let dy = 0;
+            update(dt, keys, joy) {
+                let dx = 0, dy = 0;
+
                 if (keys['w'] || keys['W'] || keys['ArrowUp']) dy -= 1;
                 if (keys['s'] || keys['S'] || keys['ArrowDown']) dy += 1;
                 if (keys['a'] || keys['A'] || keys['ArrowLeft']) dx -= 1;
                 if (keys['d'] || keys['D'] || keys['ArrowRight']) dx += 1;
 
-                // Touch Drag Movement
-                if (touchPos.active) {
-                    const tdx = touchPos.x - this.x;
-                    const tdy = touchPos.y - this.y;
-                    const dist = Math.hypot(tdx, tdy);
-                    if (dist > 10) {
-                        dx = tdx / dist;
-                        dy = tdy / dist;
-                    }
+                if (joy && joy.active) {
+                    dx = joy.dx;
+                    dy = joy.dy;
                 }
 
-                // Normalize movement vector
-                if (dx !== 0 && dy !== 0) {
-                    dx *= 0.7071;
-                    dy *= 0.7071;
+                let mag = Math.hypot(dx, dy);
+                if (mag > 1) { dx /= mag; dy /= mag; mag = 1; }
+                if (mag < 0.08) { dx = 0; dy = 0; mag = 0; }
+
+                if (mag > 0) {
+                    this.x += dx * this.speed * dt * 60;
+                    this.y += dy * this.speed * dt * 60;
                 }
 
-                this.x += dx * this.speed * dt * 60;
-                this.y += dy * this.speed * dt * 60;
-
-                // Clamp to screen bounds
                 this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
                 this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
 
-                // Hit Flash Animation
                 if (this.hitFlash > 0) this.hitFlash -= dt * 5;
 
-                // Orbiting Blades Logic
                 if (this.blades > 0) {
                     this.bladeAngle += dt * 2.5;
                     const bladeOrbitRadius = 65;
@@ -677,36 +745,37 @@
                         const angle = this.bladeAngle + (i * Math.PI * 2 / this.blades);
                         const bx = this.x + Math.cos(angle) * bladeOrbitRadius;
                         const by = this.y + Math.sin(angle) * bladeOrbitRadius;
-
-                        // Check collision with enemies
-                        enemies.forEach(enemy => {
+                        for (let j = enemies.length - 1; j >= 0; j--) {
+                            const enemy = enemies[j];
+                            if (enemy.markedForDeletion) continue;
                             const edist = Math.hypot(enemy.x - bx, enemy.y - by);
                             if (edist < enemy.radius + 12) {
                                 enemy.takeDamage(this.damage * 0.4 * dt * 60);
                                 createParticles(bx, by, '#38bdf8', 2);
                             }
-                        });
+                        }
                     }
                 }
 
-                // Automatic Target Shooting
                 const target = getNearestEnemy(this.x, this.y);
                 const now = performance.now() / 1000;
+
                 if (target && (now - this.lastShotTime >= (1 / this.fireRate))) {
                     this.shoot(target);
                     this.lastShotTime = now;
                 }
 
-                // Drones Automatic Shooting
-                if (this.drones > 0 && target && (now - this.lastShotTime >= (1 / this.fireRate))) {
+                if (this.drones > 0 && target && (now - this.lastDroneShotTime >= (1 / this.fireRate))) {
                     const droneOrbitRadius = 45;
+                    const t = performance.now() / 1000;
                     for (let i = 0; i < this.drones; i++) {
-                        const dAngle = (performance.now() / 1000 * 1.5) + (i * Math.PI * 2 / this.drones);
+                        const dAngle = (t * 1.5) + (i * Math.PI * 2 / this.drones);
                         const dxPos = this.x + Math.cos(dAngle) * droneOrbitRadius;
                         const dyPos = this.y + Math.sin(dAngle) * droneOrbitRadius;
                         const angle = Math.atan2(target.y - dyPos, target.x - dxPos);
                         bullets.push(new Bullet(dxPos, dyPos, angle, this.damage * 0.6, this.bulletSize * 0.8, '#06b6d4'));
                     }
+                    this.lastDroneShotTime = now;
                 }
             }
 
@@ -714,7 +783,6 @@
                 playSound('shoot');
                 const baseAngle = Math.atan2(target.y - this.y, target.x - this.x);
                 const spread = 0.15;
-
                 for (let i = 0; i < this.multishot; i++) {
                     const offset = (i - (this.multishot - 1) / 2) * spread;
                     bullets.push(new Bullet(this.x, this.y, baseAngle + offset, this.damage, this.bulletSize, '#38bdf8'));
@@ -725,21 +793,18 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
 
-                // Outer Neon Halo Ring
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius + 8 + Math.sin(performance.now() / 200) * 2, 0, Math.PI * 2);
                 ctx.strokeStyle = this.hitFlash > 0 ? '#ef4444' : 'rgba(56, 189, 248, 0.35)';
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Concentric Intermediate Ring
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius + 2, 0, Math.PI * 2);
                 ctx.strokeStyle = '#06b6d4';
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                // Concentric Glowing Core
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius - 4, 0, Math.PI * 2);
                 ctx.fillStyle = this.hitFlash > 0 ? '#f87171' : '#38bdf8';
@@ -747,22 +812,20 @@
                 ctx.shadowBlur = 15;
                 ctx.fill();
 
-                // Center Pulsing Orb
                 ctx.beginPath();
                 ctx.arc(0, 0, 4, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffffff';
                 ctx.fill();
-
                 ctx.restore();
 
-                // Render Orbiting Drones
+                const t = performance.now() / 1000;
+
                 if (this.drones > 0) {
                     const droneOrbitRadius = 45;
                     for (let i = 0; i < this.drones; i++) {
-                        const dAngle = (performance.now() / 1000 * 1.5) + (i * Math.PI * 2 / this.drones);
+                        const dAngle = (t * 1.5) + (i * Math.PI * 2 / this.drones);
                         const dxPos = this.x + Math.cos(dAngle) * droneOrbitRadius;
                         const dyPos = this.y + Math.sin(dAngle) * droneOrbitRadius;
-
                         ctx.save();
                         ctx.beginPath();
                         ctx.arc(dxPos, dyPos, 6, 0, Math.PI * 2);
@@ -774,14 +837,12 @@
                     }
                 }
 
-                // Render Orbiting Blades
                 if (this.blades > 0) {
                     const bladeOrbitRadius = 65;
                     for (let i = 0; i < this.blades; i++) {
                         const angle = this.bladeAngle + (i * Math.PI * 2 / this.blades);
                         const bx = this.x + Math.cos(angle) * bladeOrbitRadius;
                         const by = this.y + Math.sin(angle) * bladeOrbitRadius;
-
                         ctx.save();
                         ctx.translate(bx, by);
                         ctx.rotate(angle + Math.PI / 2);
@@ -798,21 +859,24 @@
 
             addXp(amount) {
                 this.xp += amount;
-                if (this.xp >= this.nextXp) {
-                    this.xp -= this.nextXp;
+                // 使用 1e-6 容差，防止浮点误差导致“刚好足够”时不触发升级
+                while (this.xp >= this.nextXp - 1e-6) {
+                    this.xp = Math.max(0, this.xp - this.nextXp);
                     this.level++;
                     this.nextXp = Math.floor(this.nextXp * 1.35);
-                    triggerLevelUp();
+                    this.pendingLevelUps++;
                 }
                 updateHUD();
+                if (this.pendingLevelUps > 0 && !isPaused) {
+                    triggerLevelUp();
+                }
             }
         }
 
-        // Bullet Class
+        /* ---------------- BULLET ---------------- */
         class Bullet {
             constructor(x, y, angle, damage, size, color) {
-                this.x = x;
-                this.y = y;
+                this.x = x; this.y = y;
                 this.speed = 12;
                 this.vx = Math.cos(angle) * this.speed;
                 this.vy = Math.sin(angle) * this.speed;
@@ -821,16 +885,13 @@
                 this.color = color;
                 this.markedForDeletion = false;
             }
-
             update(dt) {
                 this.x += this.vx * dt * 60;
                 this.y += this.vy * dt * 60;
-
-                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                if (this.x < -20 || this.x > canvas.width + 20 || this.y < -20 || this.y > canvas.height + 20) {
                     this.markedForDeletion = true;
                 }
             }
-
             draw() {
                 ctx.save();
                 ctx.beginPath();
@@ -843,63 +904,35 @@
             }
         }
 
-        // Enemy Class
+        /* ---------------- ENEMY ---------------- */
         class Enemy {
             constructor(type, x, y) {
                 this.type = type;
-                this.x = x;
-                this.y = y;
+                this.x = x; this.y = y;
                 this.markedForDeletion = false;
                 this.lastShotTime = 0;
 
-                // Base Stats according to Type
-                if (type === 'chaser') {
-                    this.radius = 12;
-                    this.speed = 2.4;
-                    this.maxHp = 30;
-                    this.color = '#ef4444';
-                    this.xpValue = 2;
-                } else if (type === 'speeder') {
-                    this.radius = 9;
-                    this.speed = 4.5;
-                    this.maxHp = 18;
-                    this.color = '#f97316';
-                    this.xpValue = 3;
-                } else if (type === 'splitter') {
-                    this.radius = 18;
-                    this.speed = 1.8;
-                    this.maxHp = 60;
-                    this.color = '#a855f7';
-                    this.xpValue = 5;
-                } else if (type === 'miniSplitter') {
-                    this.radius = 8;
-                    this.speed = 3.6;
-                    this.maxHp = 15;
-                    this.color = '#c084fc';
-                    this.xpValue = 2;
-                } else if (type === 'sniper') {
-                    this.radius = 14;
-                    this.speed = 1.6;
-                    this.maxHp = 45;
-                    this.color = '#14b8a6';
-                    this.xpValue = 6;
-                } else if (type === 'tank') {
-                    this.radius = 24;
-                    this.speed = 1.1;
-                    this.maxHp = 160;
-                    this.color = '#10b981';
-                    this.xpValue = 10;
-                } else if (type === 'boss') {
-                    this.radius = 45;
-                    this.speed = 0.8;
-                    this.maxHp = 1200;
-                    this.color = '#f43f5e';
-                    this.xpValue = 100;
-                }
+                if (type === 'chaser') { this.radius = 12; this.speed = 2.4; this.maxHp = 30; this.color = '#ef4444'; this.xpValue = 2; }
+                else if (type === 'speeder') { this.radius = 9; this.speed = 4.5; this.maxHp = 18; this.color = '#f97316'; this.xpValue = 3; }
+                else if (type === 'splitter') { this.radius = 18; this.speed = 1.8; this.maxHp = 60; this.color = '#a855f7'; this.xpValue = 5; }
+                else if (type === 'miniSplitter') { this.radius = 8; this.speed = 3.6; this.maxHp = 15; this.color = '#c084fc'; this.xpValue = 2; }
+                else if (type === 'sniper') { this.radius = 14; this.speed = 1.6; this.maxHp = 45; this.color = '#14b8a6'; this.xpValue = 6; }
+                else if (type === 'tank') { this.radius = 24; this.speed = 1.1; this.maxHp = 160; this.color = '#10b981'; this.xpValue = 10; }
+                else if (type === 'boss') { this.radius = 45; this.speed = 0.8; this.maxHp = 1200; this.color = '#f43f5e'; this.xpValue = 100; }
 
-                // Apply Difficulty Adjustments
+                // 难度调整
                 const diffMult = difficulty === 'easy' ? 0.75 : (difficulty === 'hard' ? 1.4 : 1.0);
                 this.maxHp = Math.floor(this.maxHp * diffMult);
+
+                // 随玩家等级温和成长（爽游：敌人成长远低于玩家成长）
+                const lv = (player && player.level) ? player.level : 1;
+                const hpScale = 1 + Math.max(0, lv - 1) * BALANCE.enemyHpPerLevel;
+                const spdScale = Math.min(BALANCE.enemySpeedCap, 1 + Math.max(0, lv - 1) * BALANCE.enemySpeedPerLevel);
+                this.maxHp = Math.floor(this.maxHp * hpScale);
+                this.speed *= spdScale;
+
+                // 避免超低血量敌人被一枪秒的光速感（保底）
+                this.maxHp = Math.max(1, this.maxHp);
                 this.hp = this.maxHp;
             }
 
@@ -907,7 +940,6 @@
                 const angle = Math.atan2(player.y - this.y, player.x - this.x);
                 const dist = Math.hypot(player.x - this.x, player.y - this.y);
 
-                // Sniper Movement & Shooting Logic
                 if (this.type === 'sniper') {
                     if (dist < 220) {
                         this.x -= Math.cos(angle) * this.speed * dt * 60;
@@ -916,7 +948,6 @@
                         this.x += Math.cos(angle) * this.speed * dt * 60;
                         this.y += Math.sin(angle) * this.speed * dt * 60;
                     }
-
                     const now = performance.now() / 1000;
                     if (now - this.lastShotTime >= 2.5) {
                         enemyBullets.push(new Bullet(this.x, this.y, angle, 12, 4, '#14b8a6'));
@@ -929,16 +960,33 @@
             }
 
             takeDamage(amount) {
+                if (this.markedForDeletion) return;
                 this.hp -= amount;
                 playSound('hit');
                 if (this.hp <= 0) {
                     this.markedForDeletion = true;
                     playSound('explosion');
                     createParticles(this.x, this.y, this.color, 8);
-                    gems.push(new Gem(this.x, this.y, this.xpValue));
                     totalKills++;
 
-                    // Splitter splitting behavior
+                    // 掉落经验：随玩家等级增加经验量（爽游节奏）
+                    const xpScale = 1 + Math.max(0, (player ? player.level : 1) - 1) * BALANCE.gemXpPerLevel;
+                    if (this.type === 'boss') {
+                        // 剛好足以讓玩家升一級：總經驗 = 升下一級所需經驗
+                        const xpNeeded = Math.max(1, player.nextXp - player.xp);
+                        const dropCount = 15;
+                        const perGem = xpNeeded / dropCount;
+                        for (let i = 0; i < dropCount; i++) {
+                            const a = Math.random() * Math.PI * 2;
+                            const r = Math.random() * this.radius * 1.3;
+                            gems.push(new Gem(this.x + Math.cos(a) * r, this.y + Math.sin(a) * r, perGem));
+                        }
+                        createParticles(this.x, this.y, '#fbbf24', 24);
+                    } else {
+                        const gemValue = Math.max(1, this.xpValue * xpScale);
+                        gems.push(new Gem(this.x, this.y, gemValue));
+                    }
+
                     if (this.type === 'splitter') {
                         enemies.push(new Enemy('miniSplitter', this.x - 10, this.y));
                         enemies.push(new Enemy('miniSplitter', this.x + 10, this.y));
@@ -953,7 +1001,6 @@
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
-
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
@@ -961,7 +1008,6 @@
                 ctx.shadowBlur = 10;
                 ctx.fill();
 
-                // Enemy HP Bar
                 if (this.hp < this.maxHp) {
                     const barWidth = this.radius * 2;
                     const hpPercent = Math.max(0, this.hp / this.maxHp);
@@ -970,16 +1016,14 @@
                     ctx.fillStyle = '#ef4444';
                     ctx.fillRect(-this.radius, -this.radius - 8, barWidth * hpPercent, 4);
                 }
-
                 ctx.restore();
             }
         }
 
-        // Particle Class
+        /* ---------------- PARTICLE / GEM ---------------- */
         class Particle {
             constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
+                this.x = x; this.y = y;
                 this.color = color;
                 this.radius = Math.random() * 3 + 1;
                 const angle = Math.random() * Math.PI * 2;
@@ -988,13 +1032,11 @@
                 this.vy = Math.sin(angle) * speed;
                 this.alpha = 1.0;
             }
-
             update(dt) {
                 this.x += this.vx * dt * 60;
                 this.y += this.vy * dt * 60;
                 this.alpha -= dt * 2.5;
             }
-
             draw() {
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, this.alpha);
@@ -1007,21 +1049,17 @@
         }
 
         function createParticles(x, y, color, count) {
-            for (let i = 0; i < count; i++) {
-                particles.push(new Particle(x, y, color));
-            }
+            for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
         }
 
-        // Gem / Experience Crystal Class
         class Gem {
             constructor(x, y, value) {
-                this.x = x;
-                this.y = y;
+                this.x = x; this.y = y;
                 this.value = value;
-                this.radius = 4;
+                // 高價值水晶稍大一點，視覺反饋更好
+                this.radius = value >= 10 ? 6 : (value >= 5 ? 5 : 4);
                 this.markedForDeletion = false;
             }
-
             update(dt) {
                 const dist = Math.hypot(player.x - this.x, player.y - this.y);
                 if (dist < player.magnetRadius) {
@@ -1030,13 +1068,11 @@
                     this.x += Math.cos(angle) * pullSpeed * dt * 60;
                     this.y += Math.sin(angle) * pullSpeed * dt * 60;
                 }
-
                 if (dist < player.radius + this.radius) {
                     this.markedForDeletion = true;
                     player.addXp(this.value);
                 }
             }
-
             draw() {
                 ctx.save();
                 ctx.beginPath();
@@ -1049,93 +1085,64 @@
             }
         }
 
-        // Helper: Find Nearest Enemy
         function getNearestEnemy(x, y) {
-            let nearest = null;
-            let minDist = Infinity;
-            enemies.forEach(e => {
+            let nearest = null, minDist = Infinity;
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
+                if (e.markedForDeletion) continue;
                 const d = Math.hypot(e.x - x, e.y - y);
-                if (d < minDist) {
-                    minDist = d;
-                    nearest = e;
-                }
-            });
+                if (d < minDist) { minDist = d; nearest = e; }
+            }
             return nearest;
         }
 
-        // Infinite Stackable Upgrade Pool
+        /* ---------------- UPGRADES ---------------- */
         const UPGRADE_POOL = [
-            {
-                id: 'drone',
-                icon: '🛸',
-                name: { 'zh-Hant': '戰術無人機', 'en': 'Tactical Drone' },
-                desc: { 'zh-Hant': '+1架自動環繞鎖敵發射無人機（可無上限疊加）', 'en': '+1 Orbiting Auto-firing Drone (Stackable)' },
-                apply: () => player.drones++
-            },
-            {
-                id: 'blade',
-                icon: '⚔️',
-                name: { 'zh-Hant': '等離子光刃', 'en': 'Plasma Blade' },
-                desc: { 'zh-Hant': '+1把近戰旋轉光刃（可無上限疊加）', 'en': '+1 Orbiting Shield Blade (Stackable)' },
-                apply: () => player.blades++
-            },
-            {
-                id: 'multishot',
-                icon: '🔱',
-                name: { 'zh-Hant': '多重發射', 'en': 'Multishot' },
-                desc: { 'zh-Hant': '每次射擊增加 1 顆平行子彈', 'en': '+1 Extra Bullet Per Shot' },
-                apply: () => player.multishot++
-            },
-            {
-                id: 'damage',
-                icon: '💥',
-                name: { 'zh-Hant': '火力強化', 'en': 'Damage Boost' },
-                desc: { 'zh-Hant': '基礎砲擊傷害增加 35%', 'en': 'Increase Bullet Damage by 35%' },
-                apply: () => player.damage *= 1.35
-            },
-            {
-                id: 'fireRate',
-                icon: '⚡',
-                name: { 'zh-Hant': '過載射速', 'en': 'Overdrive Fire Rate' },
-                desc: { 'zh-Hant': '提升 25% 砲擊頻率', 'en': 'Increase Fire Rate by 25%' },
-                apply: () => player.fireRate *= 1.25
-            },
-            {
-                id: 'speed',
-                icon: '👟',
-                name: { 'zh-Hant': '推進引擎', 'en': 'Thruster Engine' },
-                desc: { 'zh-Hant': '提升 20% 核心移動速度', 'en': 'Increase Move Speed by 20%' },
-                apply: () => player.speed *= 1.2
-            },
-            {
-                id: 'magnet',
-                icon: '🧲',
-                name: { 'zh-Hant': '高壓磁場', 'en': 'Crystal Magnet' },
-                desc: { 'zh-Hant': '擴大 40% 經驗水晶拾取範圍', 'en': 'Increase Magnet Pickup Range by 40%' },
-                apply: () => player.magnetRadius *= 1.4
-            },
-            {
-                id: 'heal',
-                icon: '❤️',
-                name: { 'zh-Hant': '核心修復', 'en': 'Core Repair' },
-                desc: { 'zh-Hant': '立即恢復 50% 生命值並提升血量上限', 'en': 'Restore 50% HP & Raise Max HP' },
-                apply: () => {
-                    player.maxHp += 20;
-                    player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5);
-                }
-            }
+            { id: 'drone', icon: '🛸',
+              name: { 'zh-Hant': '戰術無人機', en: 'Tactical Drone' },
+              desc: { 'zh-Hant': '+1架自動環繞鎖敵發射無人機（可無上限疊加）', en: '+1 Orbiting Auto-firing Drone (Stackable)' },
+              apply: () => player.drones++ },
+            { id: 'blade', icon: '⚔️',
+              name: { 'zh-Hant': '等離子光刃', en: 'Plasma Blade' },
+              desc: { 'zh-Hant': '+1把近戰旋轉光刃（可無上限疊加）', en: '+1 Orbiting Shield Blade (Stackable)' },
+              apply: () => player.blades++ },
+            { id: 'multishot', icon: '🔱',
+              name: { 'zh-Hant': '多重發射', en: 'Multishot' },
+              desc: { 'zh-Hant': '每次射擊增加 1 顆平行子彈', en: '+1 Extra Bullet Per Shot' },
+              apply: () => player.multishot++ },
+            { id: 'damage', icon: '💥',
+              name: { 'zh-Hant': '火力強化', en: 'Damage Boost' },
+              desc: { 'zh-Hant': '基礎砲擊傷害增加 35%', en: 'Increase Bullet Damage by 35%' },
+              apply: () => player.damage *= 1.35 },
+            { id: 'fireRate', icon: '⚡',
+              name: { 'zh-Hant': '過載射速', en: 'Overdrive Fire Rate' },
+              desc: { 'zh-Hant': '提升 25% 砲擊頻率', en: 'Increase Fire Rate by 25%' },
+              apply: () => player.fireRate *= 1.25 },
+            { id: 'speed', icon: '👟',
+              name: { 'zh-Hant': '推進引擎', en: 'Thruster Engine' },
+              desc: { 'zh-Hant': '提升 20% 核心移動速度', en: 'Increase Move Speed by 20%' },
+              apply: () => player.speed *= 1.2 },
+            { id: 'magnet', icon: '🧲',
+              name: { 'zh-Hant': '高壓磁場', en: 'Crystal Magnet' },
+              desc: { 'zh-Hant': '擴大 40% 經驗水晶拾取範圍', en: 'Increase Magnet Pickup Range by 40%' },
+              apply: () => player.magnetRadius *= 1.4 },
+            { id: 'heal', icon: '❤️',
+              name: { 'zh-Hant': '核心修復', en: 'Core Repair' },
+              desc: { 'zh-Hant': '立即恢復 50% 生命值並提升血量上限', en: 'Restore 50% HP & Raise Max HP' },
+              apply: () => {
+                  player.maxHp += 20;
+                  player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5);
+              } }
         ];
 
-        // Trigger Level Up Modal
         function triggerLevelUp() {
             playSound('levelup');
             isPaused = true;
+            resetJoystick();
             const container = document.getElementById('upgradeCardsContainer');
             container.innerHTML = '';
 
-            // Shuffle and pick 3 unique upgrades
             const shuffled = [...UPGRADE_POOL].sort(() => 0.5 - Math.random()).slice(0, 3);
-
             shuffled.forEach(upgrade => {
                 const card = document.createElement('div');
                 card.className = 'upgrade-card neon-card p-4 rounded-2xl border border-slate-700/60 flex items-center space-x-4 cursor-pointer text-left';
@@ -1144,52 +1151,99 @@
                     <div class="flex-1">
                         <h4 class="font-extrabold text-cyan-300 text-sm">${upgrade.name[currentLang]}</h4>
                         <p class="text-xs text-slate-400 mt-0.5">${upgrade.desc[currentLang]}</p>
-                    </div>
-                `;
-                card.addEventListener('click', () => {
-                    upgrade.apply();
-                    levelUpModal.classList.add('hidden');
-                    isPaused = false;
-                    saveAutoSaveData();
-                });
+                    </div>`;
+                card.addEventListener('click', () => onUpgradeSelected(upgrade));
                 container.appendChild(card);
             });
 
             levelUpModal.classList.remove('hidden');
         }
 
-        // Controls input listeners
+        function onUpgradeSelected(upgrade) {
+            upgrade.apply();
+            player.pendingLevelUps = Math.max(0, (player.pendingLevelUps || 1) - 1);
+            levelUpModal.classList.add('hidden');
+
+            if (player.pendingLevelUps > 0) {
+                triggerLevelUp();
+            } else {
+                isPaused = false;
+                resetJoystick();
+                saveAutoSaveData();
+            }
+        }
+
+        /* ---------------- INPUT ---------------- */
         const keys = {};
         window.addEventListener('keydown', e => {
             keys[e.key] = true;
-            if (e.key === 'Escape' && isGameRunning) {
-                togglePause();
-            }
+            if (e.key === 'Escape' && isGameRunning) togglePause();
         });
         window.addEventListener('keyup', e => keys[e.key] = false);
 
-        // Touch Input Handler
-        const touchPos = { active: false, x: 0, y: 0 };
+        // --- 觸控：按下即「傳送」搖桿到手指位置 ---
         window.addEventListener('touchstart', e => {
-            if (isGameRunning && !isPaused && e.touches.length > 0) {
-                touchPos.active = true;
-                touchPos.x = e.touches[0].clientX;
-                touchPos.y = e.touches[0].clientY;
-            }
-        });
-        window.addEventListener('touchmove', e => {
-            if (touchPos.active && e.touches.length > 0) {
-                touchPos.x = e.touches[0].clientX;
-                touchPos.y = e.touches[0].clientY;
-            }
-        });
-        window.addEventListener('touchend', () => touchPos.active = false);
+            if (!isGameRunning || isPaused) return;
+            if (isUIElement(e.target)) return;
+            if (isScrollableTarget(e.target)) return;
+            if (joystick.active) return;
 
-        // Enemy Spawner Logic
+            const touch = e.changedTouches[0];
+            if (!touch) return;
+            teleportJoystickTo(touch.clientX, touch.clientY);
+            joystick.touchId = touch.identifier;
+            updateJoystickFromPoint(touch.clientX, touch.clientY);
+            e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('touchmove', e => {
+            if (!joystick.active) return;
+            for (const touch of e.changedTouches) {
+                if (touch.identifier === joystick.touchId) {
+                    updateJoystickFromPoint(touch.clientX, touch.clientY);
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        function handleTouchEnd(e) {
+            if (!joystick.active) return;
+            for (const touch of e.changedTouches) {
+                if (touch.identifier === joystick.touchId) {
+                    resetJoystick();
+                    break;
+                }
+            }
+        }
+        window.addEventListener('touchend', handleTouchEnd, { passive: false });
+        window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+        // --- 滑鼠：同樣按下即傳送（桌面測試用） ---
+        window.addEventListener('mousedown', e => {
+            if (!isGameRunning || isPaused) return;
+            if (isUIElement(e.target)) return;
+            if (isScrollableTarget(e.target)) return;
+            if (e.button !== 0) return;
+            teleportJoystickTo(e.clientX, e.clientY);
+            joystick.mouse = true;
+            updateJoystickFromPoint(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', e => {
+            if (joystick.active && joystick.mouse) {
+                updateJoystickFromPoint(e.clientX, e.clientY);
+            }
+        });
+        window.addEventListener('mouseup', () => {
+            if (joystick.active && joystick.mouse) {
+                resetJoystick();
+            }
+        });
+
+        /* ---------------- SPAWNER ---------------- */
         function spawnEnemies(dt) {
             gameTime += dt;
 
-            // Boss spawn every 60 seconds
             if (gameTime - lastBossTime >= 60) {
                 lastBossTime = gameTime;
                 playSound('boss');
@@ -1197,17 +1251,22 @@
                 setTimeout(() => bossBanner.classList.add('hidden'), 3500);
 
                 const side = Math.floor(Math.random() * 4);
-                let bx = side === 0 ? 0 : (side === 1 ? canvas.width : Math.random() * canvas.width);
-                let by = side === 2 ? 0 : (side === 3 ? canvas.height : Math.random() * canvas.height);
+                const bx = side === 0 ? 0 : (side === 1 ? canvas.width : Math.random() * canvas.width);
+                const by = side === 2 ? 0 : (side === 3 ? canvas.height : Math.random() * canvas.height);
                 enemies.push(new Enemy('boss', bx, by));
             }
 
-            // Normal Enemy Spawns
             const spawnRate = Math.max(0.3, 1.8 - Math.floor(gameTime / 15) * 0.15);
-            if (Math.random() < (dt / spawnRate)) {
+            const diffRate = difficulty === 'easy' ? 1.3 : (difficulty === 'hard' ? 0.7 : 1.0);
+            // 玩家等级轻微提升刷怪频率（爽游：让玩家有更多目标可收割）
+            const lv = (player && player.level) ? player.level : 1;
+            const lvSpawnBoost = Math.min(BALANCE.spawnRateLvBoostCap, Math.max(0, lv - 1) * 0.01);
+            const effectiveSpawnRate = spawnRate * diffRate * (1 - lvSpawnBoost);
+
+            if (Math.random() < (dt / Math.max(0.2, effectiveSpawnRate))) {
                 const side = Math.floor(Math.random() * 4);
-                let ex = side === 0 ? -20 : (side === 1 ? canvas.width + 20 : Math.random() * canvas.width);
-                let ey = side === 2 ? -20 : (side === 3 ? canvas.height + 20 : Math.random() * canvas.height);
+                const ex = side === 0 ? -20 : (side === 1 ? canvas.width + 20 : Math.random() * canvas.width);
+                const ey = side === 2 ? -20 : (side === 3 ? canvas.height + 20 : Math.random() * canvas.height);
 
                 const rand = Math.random();
                 let type = 'chaser';
@@ -1220,32 +1279,25 @@
             }
         }
 
-        // Auto Save Game State
+        /* ---------------- SAVE / LOAD ---------------- */
         function saveAutoSaveData() {
-            if (!isGameRunning || player.hp <= 0) return;
+            if (!isGameRunning || !player || player.hp <= 0) return;
             const state = {
-                score,
-                gameTime,
-                totalKills,
-                difficulty,
+                score, gameTime, totalKills, difficulty, lastBossTime,
                 player: {
-                    hp: player.hp,
-                    maxHp: player.maxHp,
-                    level: player.level,
-                    xp: player.xp,
-                    nextXp: player.nextXp,
-                    damage: player.damage,
-                    fireRate: player.fireRate,
-                    speed: player.speed,
-                    multishot: player.multishot,
-                    drones: player.drones,
-                    blades: player.blades,
-                    magnetRadius: player.magnetRadius
+                    hp: player.hp, maxHp: player.maxHp,
+                    level: player.level, xp: player.xp, nextXp: player.nextXp,
+                    pendingLevelUps: player.pendingLevelUps,
+                    damage: player.damage, fireRate: player.fireRate,
+                    speed: player.speed, multishot: player.multishot,
+                    drones: player.drones, blades: player.blades,
+                    magnetRadius: player.magnetRadius, bulletSize: player.bulletSize
                 }
             };
-            localStorage.setItem('neon_autosave', JSON.stringify(state));
+            try {
+                localStorage.setItem('neon_autosave', JSON.stringify(state));
+            } catch (err) { /* ignore */ }
 
-            // Show Auto-Save Badge
             autoSaveBadge.classList.remove('opacity-0');
             setTimeout(() => autoSaveBadge.classList.add('opacity-0'), 1500);
         }
@@ -1259,7 +1311,8 @@
         function loadAutoSaveData() {
             const saved = localStorage.getItem('neon_autosave');
             if (!saved) return;
-            const data = JSON.parse(saved);
+            let data;
+            try { data = JSON.parse(saved); } catch (err) { return; }
             applyGameStateData(data);
             startGame(true);
         }
@@ -1270,23 +1323,32 @@
             totalKills = data.totalKills || 0;
             difficulty = data.difficulty || 'normal';
 
+            bullets = [];
+            enemyBullets = [];
+            enemies = [];
+            particles = [];
+            gems = [];
+
             player = new Player();
-            if (data.player) {
-                Object.assign(player, data.player);
-            }
+            if (data.player) Object.assign(player, data.player);
+            player.pendingLevelUps = player.pendingLevelUps || 0;
+            lastBossTime = (data.lastBossTime != null) ? data.lastBossTime : (data.gameTime || 0);
+            autoSaveTimer = 0;
         }
 
-        // HUD Update
+        /* ---------------- HUD ---------------- */
         function updateHUD() {
+            if (!player) return;
             document.getElementById('hpFill').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
-            document.getElementById('hpText').innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
-            document.getElementById('xpFill').style.width = `${(player.xp / player.nextXp) * 100}%`;
+            document.getElementById('hpText').innerText = `${Math.ceil(Math.max(0, player.hp))} / ${player.maxHp}`;
+            const xpPct = player.nextXp > 0 ? (player.xp / player.nextXp) * 100 : 0;
+            document.getElementById('xpFill').style.width = `${Math.min(100, Math.max(0, xpPct))}%`;
             document.getElementById('levelText').innerText = player.level;
             document.getElementById('scoreText').innerText = score;
             document.getElementById('bestScoreText').innerText = highScore;
         }
 
-        // Main Game Loop
+        /* ---------------- GAME LOOP ---------------- */
         let lastTime = 0;
         function gameLoop(timestamp) {
             if (!lastTime) lastTime = timestamp;
@@ -1294,115 +1356,108 @@
             lastTime = timestamp;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Background Grid
             drawBackgroundGrid();
 
-            if (isGameRunning && !isPaused) {
-                // Auto save every 10s
+            if (isGameRunning && !isPaused && player) {
                 autoSaveTimer += dt;
                 if (autoSaveTimer >= 10) {
                     autoSaveTimer = 0;
                     saveAutoSaveData();
                 }
 
-                // Update Entities
-                player.update(dt, keys, touchPos);
+                player.update(dt, keys, joystick);
                 spawnEnemies(dt);
 
-                // Update Bullets
-                bullets.forEach(b => b.update(dt));
-                enemyBullets.forEach(eb => eb.update(dt));
-                enemies.forEach(e => e.update(dt));
-                particles.forEach(p => p.update(dt));
-                gems.forEach(g => g.update(dt));
+                for (const b of bullets) b.update(dt);
+                for (const eb of enemyBullets) eb.update(dt);
+                for (const e of enemies) e.update(dt);
+                for (const p of particles) p.update(dt);
+                for (const g of gems) g.update(dt);
 
-                // Bullet Collision with Enemies
-                bullets.forEach(bullet => {
-                    enemies.forEach(enemy => {
-                        if (!bullet.markedForDeletion && !enemy.markedForDeletion) {
-                            const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
-                            if (dist < enemy.radius + bullet.radius) {
-                                bullet.markedForDeletion = true;
-                                enemy.takeDamage(bullet.damage);
-                            }
-                        }
-                    });
-                });
-
-                // Enemy Bullet Collision with Player
-                enemyBullets.forEach(eb => {
-                    if (!eb.markedForDeletion) {
-                        const dist = Math.hypot(player.x - eb.x, player.y - eb.y);
-                        if (dist < player.radius + eb.radius) {
-                            eb.markedForDeletion = true;
-                            player.hp -= eb.damage;
-                            player.hitFlash = 1.0;
-                            playSound('hit');
-                            if (player.hp <= 0) gameOver();
+                for (const bullet of bullets) {
+                    if (bullet.markedForDeletion) continue;
+                    for (const enemy of enemies) {
+                        if (enemy.markedForDeletion) continue;
+                        const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
+                        if (dist < enemy.radius + bullet.radius) {
+                            bullet.markedForDeletion = true;
+                            enemy.takeDamage(bullet.damage);
+                            break;
                         }
                     }
-                });
+                }
 
-                // Enemy Body Collision with Player
-                enemies.forEach(enemy => {
-                    const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
-                    if (dist < player.radius + enemy.radius) {
-                        player.hp -= 0.4 * dt * 60;
+                for (const eb of enemyBullets) {
+                    if (eb.markedForDeletion) continue;
+                    const dist = Math.hypot(player.x - eb.x, player.y - eb.y);
+                    if (dist < player.radius + eb.radius) {
+                        eb.markedForDeletion = true;
+                        player.hp -= eb.damage;
                         player.hitFlash = 1.0;
-                        if (player.hp <= 0) gameOver();
+                        playSound('hit');
+                        if (player.hp <= 0) { gameOver(); break; }
                     }
-                });
+                }
 
-                // Clean up dead entities
+                if (isGameRunning) {
+                    for (const enemy of enemies) {
+                        if (enemy.markedForDeletion) continue;
+                        const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+                        if (dist < player.radius + enemy.radius) {
+                            player.hp -= 0.4 * dt * 60;
+                            player.hitFlash = 1.0;
+                            if (player.hp <= 0) { gameOver(); break; }
+                        }
+                    }
+                }
+
                 bullets = bullets.filter(b => !b.markedForDeletion);
                 enemyBullets = enemyBullets.filter(eb => !eb.markedForDeletion);
                 enemies = enemies.filter(e => !e.markedForDeletion);
                 particles = particles.filter(p => p.alpha > 0);
                 gems = gems.filter(g => !g.markedForDeletion);
+
+                updateHUD();
             }
 
-            // Draw Entities
-            gems.forEach(g => g.draw());
-            bullets.forEach(b => b.draw());
-            enemyBullets.forEach(eb => eb.draw());
-            enemies.forEach(e => e.draw());
-            particles.forEach(p => p.draw());
-            if (player) player.draw();
+            if (isGameRunning && player) {
+                for (const g of gems) g.draw();
+                for (const b of bullets) b.draw();
+                for (const eb of enemyBullets) eb.draw();
+                for (const e of enemies) e.draw();
+                for (const p of particles) p.draw();
+                player.draw();
+                drawJoystick();
+            }
 
             requestAnimationFrame(gameLoop);
         }
 
-        // Draw Ambient Neon Grid
         function drawBackgroundGrid() {
             ctx.save();
             ctx.strokeStyle = 'rgba(30, 41, 59, 0.4)';
             ctx.lineWidth = 1;
             const gridSize = 40;
-
             for (let x = 0; x < canvas.width; x += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
             }
             for (let y = 0; y < canvas.height; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
             }
             ctx.restore();
         }
 
-        // Game Controls & Navigation
+        /* ---------------- FLOW ---------------- */
         function startGame(isContinuing = false) {
             initAudio();
+            resetJoystick();
+
             if (!isContinuing) {
                 score = 0;
                 gameTime = 0;
                 totalKills = 0;
                 lastBossTime = 0;
+                autoSaveTimer = 0;
                 player = new Player();
                 bullets = [];
                 enemyBullets = [];
@@ -1418,23 +1473,38 @@
             hud.classList.remove('hidden');
             gameOverModal.classList.add('hidden');
             pauseModal.classList.add('hidden');
+            levelUpModal.classList.add('hidden');
+            quitModal.classList.add('hidden');
+            bossBanner.classList.add('hidden');
             updateHUD();
+
+            if (isContinuing && player && player.pendingLevelUps > 0) {
+                triggerLevelUp();
+            }
         }
 
         function togglePause() {
             if (!isGameRunning) return;
+            if (!levelUpModal.classList.contains('hidden')) return;
+            if (!quitModal.classList.contains('hidden')) return;
             isPaused = !isPaused;
-            if (isPaused) pauseModal.classList.remove('hidden');
-            else pauseModal.classList.add('hidden');
+            if (isPaused) {
+                resetJoystick();
+                pauseModal.classList.remove('hidden');
+            } else {
+                pauseModal.classList.add('hidden');
+            }
         }
 
         function gameOver() {
+            if (!isGameRunning) return;
             isGameRunning = false;
+            resetJoystick();
             playSound('explosion');
 
             if (score > highScore) {
                 highScore = score;
-                localStorage.setItem('neon_high_score', highScore);
+                localStorage.setItem('neon_high_score', String(highScore));
             }
 
             localStorage.removeItem('neon_autosave');
@@ -1442,23 +1512,26 @@
             document.getElementById('finalKills').innerText = totalKills;
             gameOverModal.classList.remove('hidden');
             hud.classList.add('hidden');
+            levelUpModal.classList.add('hidden');
             checkAutoSave();
         }
 
         function returnToMainMenu() {
             isGameRunning = false;
             isPaused = false;
+            resetJoystick();
             pauseModal.classList.add('hidden');
             levelUpModal.classList.add('hidden');
             gameOverModal.classList.add('hidden');
             quitModal.classList.add('hidden');
+            howToPlayModal.classList.add('hidden');
             startOverlay.classList.remove('hidden');
             hud.classList.add('hidden');
             bossBanner.classList.add('hidden');
             checkAutoSave();
         }
 
-        // Button Listeners
+        /* ---------------- BUTTONS ---------------- */
         startButton.addEventListener('click', () => startGame(false));
         continueBtn.addEventListener('click', loadAutoSaveData);
         pauseBtn.addEventListener('click', togglePause);
@@ -1470,67 +1543,95 @@
         closeGuideBtn.addEventListener('click', () => howToPlayModal.classList.add('hidden'));
 
         pauseQuitBtn.addEventListener('click', () => quitModal.classList.remove('hidden'));
+
         quickQuitBtn.addEventListener('click', () => {
             if (isGameRunning) {
+                if (!levelUpModal.classList.contains('hidden')) return;
                 isPaused = true;
+                resetJoystick();
                 quitModal.classList.remove('hidden');
             } else {
                 returnToMainMenu();
             }
         });
 
-        cancelQuitBtn.addEventListener('click', () => quitModal.classList.add('hidden'));
+        cancelQuitBtn.addEventListener('click', () => {
+            quitModal.classList.add('hidden');
+            if (isGameRunning) {
+                if (pauseModal.classList.contains('hidden')) {
+                    isPaused = false;
+                } else {
+                    isPaused = true;
+                }
+            }
+        });
+
         confirmQuitBtn.addEventListener('click', () => {
             quitModal.classList.add('hidden');
             returnToMainMenu();
         });
 
-        // Save & Load Code Handlers
-        quickSaveBtn.addEventListener('click', () => {
-            if (!player) return;
-            saveAutoSaveData();
-            const saved = localStorage.getItem('neon_autosave');
-            if (saved) {
-                const code = btoa(encodeURIComponent(saved));
-                navigator.clipboard.writeText(code).then(() => {
-                    alert(currentLang === 'zh-Hant' ? '存檔代碼已成功複製到剪貼簿！' : 'Save code copied to clipboard!');
-                }).catch(() => {
-                    prompt(currentLang === 'zh-Hant' ? '請複製以下存檔代碼：' : 'Copy your save code below:', code);
-                });
+        // ===== 快速保存到本地（localStorage） =====
+        let localSaveResetTimer = null;
+        localSaveBtn.addEventListener('click', () => {
+            if (!isGameRunning || !player || player.hp <= 0) {
+                alert(currentLang === 'zh-Hant' ? '目前沒有可儲存的遊戲進度！' : 'No game progress to save!');
+                return;
             }
+            saveAutoSaveData();
+            checkAutoSave();
+
+            const label = document.getElementById('localSaveBtnText');
+            if (!label) return;
+            label.innerText = currentLang === 'zh-Hant' ? '✅ 已保存到本地' : '✅ Saved Locally';
+            if (localSaveResetTimer) clearTimeout(localSaveResetTimer);
+            localSaveResetTimer = setTimeout(() => {
+                label.innerText = I18N[currentLang].localSaveBtnText;
+            }, 1500);
         });
 
-        copySaveCodeBtn.addEventListener('click', () => {
-            saveAutoSaveData();
-            const saved = localStorage.getItem('neon_autosave');
-            if (saved) {
-                const code = btoa(encodeURIComponent(saved));
+        function copySaveToClipboard() {
+            let saved = localStorage.getItem('neon_autosave');
+            if (isGameRunning && player && player.hp > 0) {
+                saveAutoSaveData();
+                saved = localStorage.getItem('neon_autosave');
+            }
+            if (!saved) {
+                alert(currentLang === 'zh-Hant' ? '目前沒有可複製的存檔！' : 'No save data to copy!');
+                return;
+            }
+            const code = btoa(encodeURIComponent(saved));
+            if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(code).then(() => {
                     alert(currentLang === 'zh-Hant' ? '存檔代碼已成功複製到剪貼簿！' : 'Save code copied to clipboard!');
                 }).catch(() => {
                     prompt(currentLang === 'zh-Hant' ? '請複製以下存檔代碼：' : 'Copy your save code below:', code);
                 });
+            } else {
+                prompt(currentLang === 'zh-Hant' ? '請複製以下存檔代碼：' : 'Copy your save code below:', code);
             }
-        });
+        }
+
+        quickSaveBtn.addEventListener('click', copySaveToClipboard);
+        copySaveCodeBtn.addEventListener('click', copySaveToClipboard);
 
         loadSaveBtn.addEventListener('click', () => loadModal.classList.remove('hidden'));
         cancelLoadBtn.addEventListener('click', () => loadModal.classList.add('hidden'));
         confirmLoadBtn.addEventListener('click', () => {
             const raw = saveCodeInput.value.trim();
-            if (raw) {
-                try {
-                    const jsonStr = decodeURIComponent(atob(raw));
-                    const data = JSON.parse(jsonStr);
-                    applyGameStateData(data);
-                    loadModal.classList.add('hidden');
-                    startGame(true);
-                } catch (err) {
-                    alert(currentLang === 'zh-Hant' ? '無效的存檔代碼！' : 'Invalid save code!');
-                }
+            if (!raw) return;
+            try {
+                const jsonStr = decodeURIComponent(atob(raw));
+                const data = JSON.parse(jsonStr);
+                applyGameStateData(data);
+                loadModal.classList.add('hidden');
+                saveCodeInput.value = '';
+                startGame(true);
+            } catch (err) {
+                alert(currentLang === 'zh-Hant' ? '無效的存檔代碼！' : 'Invalid save code!');
             }
         });
 
-        // Difficulty Buttons Selection
         document.querySelectorAll('.diff-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.diff-btn').forEach(b => {
@@ -1542,13 +1643,9 @@
             });
         });
 
-        // Language toggle
-        langToggleBtn.addEventListener('click', () => {
-            currentLang = currentLang === 'zh-Hant' ? 'en' : 'zh-Hant';
-            applyLanguage();
-        });
+        langToggleBtn.addEventListener('click', toggleLanguage);
+        document.getElementById('startLangBtn').addEventListener('click', toggleLanguage);
 
-        // Init on Window Load
         window.onload = () => {
             applyLanguage();
             checkAutoSave();
