@@ -166,15 +166,15 @@
             <div class="overflow-y-auto space-y-4 pr-1 text-xs leading-relaxed text-slate-300 flex-1 min-h-0">
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideControlsTitle" class="font-bold text-cyan-300">🎮 操作說明</h3>
-                    <p id="guideControlsDesc">電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：搖桿平常位於畫面角落，按下對應半屏的任意位置時搖桿會立即傳送到該處，按住拖動即可控制方向，放開後搖桿自動回到角落。核心會自動瞄準最近的敵人發射雷射炮。</p>
+                    <p id="guideControlsDesc">電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：自動瞄準模式下，按下畫面任意位置即可召喚移動搖桿；手動瞄準模式下，移動搖桿與瞄準搖桿分別位於左右半屏（依左右手模式而定）。搖桿平常位於角落，按下時會傳送到按點，放開後回歸角落。核心會自動瞄準最近的敵人發射雷射炮。</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideAimTitle" class="font-bold text-pink-300">🎯 瞄準模式</h3>
-                    <p id="guideAimDesc">自動瞄準：主炮會自動鎖定最近的敵人。手動瞄準：畫面另一側會出現瞄準搖桿，拖動瞄準搖桿決定射擊方向，放開即停止射擊。</p>
+                    <p id="guideAimDesc">自動瞄準：主炮會自動鎖定最近的敵人，移動搖桿可在畫面任意位置召喚。手動瞄準：畫面另一側會出現瞄準搖桿，拖動瞄準搖桿決定射擊方向，放開即停止射擊。</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideHandTitle" class="font-bold text-emerald-300">🤚 左右手模式</h3>
-                    <p id="guideHandDesc">右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。</p>
+                    <p id="guideHandDesc">右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideUpgradesTitle" class="font-bold text-amber-300">⭐ 無限疊加升級</h3>
@@ -491,11 +491,11 @@
                 autoSaveText: '自動儲存中...', bossText: '⚠️ 警告：無盡霸主 Boss 已登場 ⚠️',
                 codexTitle: '玩法指南與敵方檔案',
                 guideControlsTitle: '🎮 操作說明',
-                guideControlsDesc: '電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：搖桿平常位於畫面角落，按下對應半屏的任意位置時搖桿會立即傳送到該處，按住拖動即可控制方向，放開後搖桿自動回到角落。核心會自動瞄準最近的敵人發射雷射炮。',
+                guideControlsDesc: '電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：自動瞄準模式下，按下畫面任意位置即可召喚移動搖桿；手動瞄準模式下，移動搖桿與瞄準搖桿分別位於左右半屏（依左右手模式而定）。搖桿平常位於角落，按下時會傳送到按點，放開後回歸角落。核心會自動瞄準最近的敵人發射雷射炮。',
                 guideAimTitle: '🎯 瞄準模式',
-                guideAimDesc: '自動瞄準：主炮會自動鎖定最近的敵人。手動瞄準：畫面另一側會出現瞄準搖桿，拖動瞄準搖桿決定射擊方向，放開即停止射擊。',
+                guideAimDesc: '自動瞄準：主炮會自動鎖定最近的敵人，移動搖桿可在畫面任意位置召喚。手動瞄準：畫面另一側會出現瞄準搖桿，拖動瞄準搖桿決定射擊方向，放開即停止射擊。',
                 guideHandTitle: '🤚 左右手模式',
-                guideHandDesc: '右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。',
+                guideHandDesc: '右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。',
                 guideUpgradesTitle: '⭐ 無限疊加升級',
                 guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！',
                 guideScalingTitle: '📈 動態難度與獎勵',
@@ -535,11 +535,11 @@
                 autoSaveText: 'Auto-Saving...', bossText: '⚠️ WARNING: DREADNOUGHT BOSS SPAWNED ⚠️',
                 codexTitle: 'Manual & Enemy Codex',
                 guideControlsTitle: '🎮 Controls Guide',
-                guideControlsDesc: 'PC: use WASD / Arrow Keys. Touch: joysticks rest at the corners; press anywhere in the matching half-screen and the joystick teleports there, drag to steer, release and it returns. The core auto-targets the nearest enemy.',
+                guideControlsDesc: 'PC: use WASD / Arrow Keys. Touch: in Auto Aim mode, press anywhere on screen to summon the move joystick; in Manual Aim mode, the move and aim joysticks occupy separate halves according to hand mode. Joysticks rest at the corners, teleport to your press point, and return on release. The core auto-targets the nearest enemy.',
                 guideAimTitle: '🎯 Aim Modes',
-                guideAimDesc: 'Auto Aim: the main cannon locks onto the nearest enemy. Manual Aim: a second aim joystick appears on the opposite half; drag it to set firing direction, release to stop firing.',
+                guideAimDesc: 'Auto Aim: the main cannon locks onto the nearest enemy, and the move joystick can be summoned anywhere on screen. Manual Aim: a second aim joystick appears on the opposite half; drag it to set firing direction, release to stop firing.',
                 guideHandTitle: '🤚 Hand Modes',
-                guideHandDesc: 'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right.',
+                guideHandDesc: 'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right. This split only applies in Manual Aim mode.',
                 guideUpgradesTitle: '⭐ Stackable Upgrades',
                 guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely!',
                 guideScalingTitle: '📈 Dynamic Scaling & Rewards',
@@ -1338,7 +1338,7 @@
         });
         window.addEventListener('keyup', e => keys[e.key] = false);
 
-        // --- 觸控：根據半屏激活對應搖桿 ---
+        // --- 觸控：根據瞄準模式決定搖桿激活範圍 ---
         window.addEventListener('touchstart', e => {
             if (!isGameRunning || isPaused) return;
             if (isUIElement(e.target) || isScrollableTarget(e.target)) return;
@@ -1347,17 +1347,28 @@
                 const x = touch.clientX;
                 const y = touch.clientY;
                 const half = canvas.width / 2;
-                const inMoveHalf = (handMode === 'right') ? (x > half) : (x < half);
-                const inAimHalf = (handMode === 'right') ? (x < half) : (x > half);
 
-                if (inMoveHalf && !moveJoystick.active) {
-                    activateJoystick(moveJoystick, x, y, touch.identifier, false);
-                    updateJoystickFromPoint(moveJoystick, x, y);
-                    e.preventDefault();
-                } else if (inAimHalf && aimMode === 'manual' && !aimJoystick.active) {
-                    activateJoystick(aimJoystick, x, y, touch.identifier, false);
-                    updateJoystickFromPoint(aimJoystick, x, y);
-                    e.preventDefault();
+                if (aimMode === 'auto') {
+                    // 自動瞄準：整個屏幕都可召喚移動搖桿
+                    if (!moveJoystick.active) {
+                        activateJoystick(moveJoystick, x, y, touch.identifier, false);
+                        updateJoystickFromPoint(moveJoystick, x, y);
+                        e.preventDefault();
+                    }
+                } else {
+                    // 手動瞄準：按左右手模式分半屏
+                    const inMoveHalf = (handMode === 'right') ? (x > half) : (x < half);
+                    const inAimHalf = (handMode === 'right') ? (x < half) : (x > half);
+
+                    if (inMoveHalf && !moveJoystick.active) {
+                        activateJoystick(moveJoystick, x, y, touch.identifier, false);
+                        updateJoystickFromPoint(moveJoystick, x, y);
+                        e.preventDefault();
+                    } else if (inAimHalf && !aimJoystick.active) {
+                        activateJoystick(aimJoystick, x, y, touch.identifier, false);
+                        updateJoystickFromPoint(aimJoystick, x, y);
+                        e.preventDefault();
+                    }
                 }
             }
         }, { passive: false });
@@ -1387,7 +1398,7 @@
         window.addEventListener('touchend', handleTouchEnd, { passive: false });
         window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-        // --- 滑鼠：左鍵點擊對應半屏激活搖桿（桌面測試用） ---
+        // --- 滑鼠：左鍵點擊召喚搖桿（桌面測試用） ---
         window.addEventListener('mousedown', e => {
             if (!isGameRunning || isPaused) return;
             if (isUIElement(e.target) || isScrollableTarget(e.target)) return;
@@ -1395,15 +1406,23 @@
 
             const x = e.clientX, y = e.clientY;
             const half = canvas.width / 2;
-            const inMoveHalf = (handMode === 'right') ? (x > half) : (x < half);
-            const inAimHalf = (handMode === 'right') ? (x < half) : (x > half);
 
-            if (inMoveHalf && !moveJoystick.active) {
-                activateJoystick(moveJoystick, x, y, null, true);
-                updateJoystickFromPoint(moveJoystick, x, y);
-            } else if (inAimHalf && aimMode === 'manual' && !aimJoystick.active) {
-                activateJoystick(aimJoystick, x, y, null, true);
-                updateJoystickFromPoint(aimJoystick, x, y);
+            if (aimMode === 'auto') {
+                if (!moveJoystick.active) {
+                    activateJoystick(moveJoystick, x, y, null, true);
+                    updateJoystickFromPoint(moveJoystick, x, y);
+                }
+            } else {
+                const inMoveHalf = (handMode === 'right') ? (x > half) : (x < half);
+                const inAimHalf = (handMode === 'right') ? (x < half) : (x > half);
+
+                if (inMoveHalf && !moveJoystick.active) {
+                    activateJoystick(moveJoystick, x, y, null, true);
+                    updateJoystickFromPoint(moveJoystick, x, y);
+                } else if (inAimHalf && !aimJoystick.active) {
+                    activateJoystick(aimJoystick, x, y, null, true);
+                    updateJoystickFromPoint(aimJoystick, x, y);
+                }
             }
         });
 
