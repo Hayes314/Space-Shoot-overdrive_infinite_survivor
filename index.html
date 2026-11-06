@@ -181,8 +181,8 @@
                     <p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
-                    <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 動態難度與獎勵</h3>
-                    <p id="guideScalingDesc">你的等級越高，敵人的生命與速度會稍微提升（但不至於失控），同時擊殺掉落的經驗水晶也會變多，讓你維持爽快的升級節奏。</p>
+                    <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與持續壓力</h3>
+                    <p id="guideScalingDesc">割草回血讓你能維持節奏，但敵人會隨時間與你的等級變強：攻擊力更高、血量更厚、刷怪更密。Boss 與狙擊手必須靠走位躲避，秒殺 Boss 可直接升一級。活下來，才有爽感。</p>
                 </div>
                 <div class="space-y-2">
                     <h3 id="codexEnemiesTitle" class="font-bold text-rose-400 uppercase tracking-wider text-[11px]">👾 敵方威脅圖鑑</h3>
@@ -370,13 +370,50 @@
             }
         }, { passive: false });
 
-        /* ---------------- 平衡参数（爽游：玩家成长远快于敌人） ---------------- */
+        /* =========================================================
+           平衡参数：爽玩，但不可以太简单
+           - 敌人血量/速度/攻击随时间与等级稳定增长
+           - 狙击手与 Boss 具真实威胁，需要走位
+           - 玩家依然割草回血、升级快，但需要主动躲避
+           - 难度差异更明显
+           ========================================================= */
         const BALANCE = {
-            enemyHpPerLevel: 0.06,
+            // 敌人每级血量增幅
+            enemyHpPerLevel: 0.075,
+            // 敌人每级速度增幅
             enemySpeedPerLevel: 0.012,
+            // 敌人速度增幅上限
             enemySpeedCap: 1.35,
-            gemXpPerLevel: 0.14,
-            spawnRateLvBoostCap: 0.40
+            // 普通敌人掉落经验每级增幅
+            gemXpPerLevel: 0.15,
+            // 敌人数量随等级增加上限（最多 +50%）
+            spawnRateLvBoostCap: 0.50,
+
+            // 全局时间压力：每 60 秒对血量与攻击加成
+            timePressurePerMinute: 0.06,
+            timePressureCap: 0.60,
+
+            // 玩家每击杀普通敌人恢复 HP
+            hpPerKill: 0.35,
+            // 玩家击杀 Boss 恢复 HP
+            hpPerBossKill: 20,
+
+            // 普通敌人身体碰撞每秒伤害
+            bodyDamagePerSec: 14,
+            // Boss 身体碰撞每秒伤害
+            bossBodyDamagePerSec: 18,
+
+            // 狙击手子弹伤害
+            sniperBulletDamage: 10,
+            // 狙击手开火间隔（秒）
+            sniperInterval: 2.2,
+
+            // Boss 旋转弹幕伤害
+            bossBurstDamage: 8,
+            // Boss 弹幕间隔（秒）
+            bossBurstInterval: 2.8,
+            // Boss 弹幕数量
+            bossBurstCount: 10
         };
 
         /* ---------------- AUDIO ---------------- */
@@ -453,8 +490,8 @@
         let isPaused = false;
         let currentLang = 'zh-Hant';
         let difficulty = 'normal';
-        let aimMode = 'auto';   // 'auto' | 'manual'
-        let handMode = 'right'; // 'right' | 'left'
+        let aimMode = 'auto';
+        let handMode = 'right';
 
         let score = 0;
         let highScore = parseInt(localStorage.getItem('neon_high_score') || '0', 10);
@@ -498,8 +535,8 @@
                 guideHandDesc: '右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。',
                 guideUpgradesTitle: '⭐ 無限疊加升級',
                 guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！',
-                guideScalingTitle: '📈 動態難度與獎勵',
-                guideScalingDesc: '你的等級越高，敵人的生命與速度會稍微提升（但不至於失控），同時擊殺掉落的經驗水晶也會變多，讓你維持爽快的升級節奏。',
+                guideScalingTitle: '📈 爽快割草與持續壓力',
+                guideScalingDesc: '割草回血讓你能維持節奏，但敵人會隨時間與你的等級變強：攻擊力更高、血量更厚、刷怪更密。Boss 與狙擊手必須靠走位躲避，秒殺 Boss 可直接升一級。活下來，才有爽感。',
                 codexEnemiesTitle: '👾 敵方威脅圖鑑',
                 enemyChaserTitle: 'Chaser (追擊者)', enemyChaserDesc: '數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',
                 enemySpeederTitle: 'Speeder (疾速突擊者)', enemySpeederDesc: '生命值較低但移動速度極快，考量玩家反應速度。',
@@ -542,8 +579,8 @@
                 guideHandDesc: 'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right. This split only applies in Manual Aim mode.',
                 guideUpgradesTitle: '⭐ Stackable Upgrades',
                 guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely!',
-                guideScalingTitle: '📈 Dynamic Scaling & Rewards',
-                guideScalingDesc: 'As your level rises, enemies gain a little more HP and speed (never overwhelming), and defeated enemies drop more XP — keeping that satisfying power-fantasy loop going.',
+                guideScalingTitle: '📈 Power Fantasy Meets Real Pressure',
+                guideScalingDesc: 'Kills heal you, keeping the loop going — but enemies grow stronger over time and with your level: more HP, more damage, denser waves. Bosses and snipers demand active dodging. Kill a Boss for an instant level. Survive, and the power fantasy follows.',
                 codexEnemiesTitle: '👾 Enemy Threats Codex',
                 enemyChaserTitle: 'Chaser', enemyChaserDesc: 'Basic chasers that swarm directly towards the core.',
                 enemySpeederTitle: 'Speeder', enemySpeederDesc: 'Fast moving low-HP harassers requiring quick reflexes.',
@@ -599,7 +636,7 @@
         const settingsCloseBtn = document.getElementById('settingsCloseBtn');
 
         /* =========================================================
-           双摇杆系统：移动摇杆 + 瞄准摇杆（手动瞄准时启用）
+           双摇杆系统
            ========================================================= */
         const moveJoystick = {
             baseX: 0, baseY: 0, knobX: 0, knobY: 0,
@@ -761,7 +798,6 @@
             }
         }
 
-        /* ---------------- 画布尺寸 ---------------- */
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -792,7 +828,6 @@
             applyLanguage();
         }
 
-        /* ---------------- 选项按钮状态 ---------------- */
         function updateOptionButtons() {
             document.querySelectorAll('.aim-mode-btn').forEach(btn => {
                 const val = btn.getAttribute('data-aim');
@@ -1023,10 +1058,11 @@
 
             addXp(amount) {
                 this.xp += amount;
+                // 升级曲线 1.32：升级仍然快，但不会一秒连跳数级
                 while (this.xp >= this.nextXp - 1e-6) {
                     this.xp = Math.max(0, this.xp - this.nextXp);
                     this.level++;
-                    this.nextXp = Math.floor(this.nextXp * 1.35);
+                    this.nextXp = Math.floor(this.nextXp * 1.32);
                     this.pendingLevelUps++;
                 }
                 updateHUD();
@@ -1083,17 +1119,30 @@
                 else if (type === 'tank') { this.radius = 24; this.speed = 1.1; this.maxHp = 160; this.color = '#10b981'; this.xpValue = 10; }
                 else if (type === 'boss') { this.radius = 45; this.speed = 0.8; this.maxHp = 1200; this.color = '#f43f5e'; this.xpValue = 100; }
 
-                const diffMult = difficulty === 'easy' ? 0.75 : (difficulty === 'hard' ? 1.4 : 1.0);
-                this.maxHp = Math.floor(this.maxHp * diffMult);
+                // 难度：血量 ×0.75 / 1.0 / 1.4；攻击 ×0.8 / 1.0 / 1.25
+                const diffHpMult = difficulty === 'easy' ? 0.75 : (difficulty === 'hard' ? 1.4 : 1.0);
+                const diffDmgMult = difficulty === 'easy' ? 0.8 : (difficulty === 'hard' ? 1.25 : 1.0);
+                this.damageMult = diffDmgMult;
+                this.maxHp = Math.floor(this.maxHp * diffHpMult);
 
+                // 等级血量/速度成长
                 const lv = (player && player.level) ? player.level : 1;
                 const hpScale = 1 + Math.max(0, lv - 1) * BALANCE.enemyHpPerLevel;
                 const spdScale = Math.min(BALANCE.enemySpeedCap, 1 + Math.max(0, lv - 1) * BALANCE.enemySpeedPerLevel);
-                this.maxHp = Math.floor(this.maxHp * hpScale);
-                this.speed *= spdScale;
+
+                // 时间压力：每 60 秒叠加，血量与攻击增加，速度轻微增加
+                const timePressure = Math.min(BALANCE.timePressureCap, Math.floor(gameTime / 60) * BALANCE.timePressurePerMinute);
+
+                this.maxHp = Math.floor(this.maxHp * hpScale * (1 + timePressure));
+                this.speed *= spdScale * (1 + timePressure * 0.15);
+                this.damageMult *= (1 + timePressure);
 
                 this.maxHp = Math.max(1, this.maxHp);
                 this.hp = this.maxHp;
+
+                if (type === 'boss') {
+                    this.lastShotTime = performance.now() / 1000 + 1.8;
+                }
             }
 
             update(dt) {
@@ -1109,8 +1158,22 @@
                         this.y += Math.sin(angle) * this.speed * dt * 60;
                     }
                     const now = performance.now() / 1000;
-                    if (now - this.lastShotTime >= 2.5) {
-                        enemyBullets.push(new Bullet(this.x, this.y, angle, 12, 4, '#14b8a6'));
+                    if (now - this.lastShotTime >= BALANCE.sniperInterval) {
+                        const dmg = BALANCE.sniperBulletDamage * this.damageMult;
+                        enemyBullets.push(new Bullet(this.x, this.y, angle, dmg, 4, '#14b8a6'));
+                        this.lastShotTime = now;
+                    }
+                } else if (this.type === 'boss') {
+                    this.x += Math.cos(angle) * this.speed * dt * 60;
+                    this.y += Math.sin(angle) * this.speed * dt * 60;
+
+                    const now = performance.now() / 1000;
+                    if (now - this.lastShotTime >= BALANCE.bossBurstInterval) {
+                        const dmg = BALANCE.bossBurstDamage * this.damageMult;
+                        for (let i = 0; i < BALANCE.bossBurstCount; i++) {
+                            const a = (i / BALANCE.bossBurstCount) * Math.PI * 2 + now * 0.6;
+                            enemyBullets.push(new Bullet(this.x, this.y, a, dmg, 4, '#f43f5e'));
+                        }
                         this.lastShotTime = now;
                     }
                 } else {
@@ -1129,6 +1192,7 @@
                     createParticles(this.x, this.y, this.color, 8);
                     totalKills++;
 
+                    // 掉落经验
                     const xpScale = 1 + Math.max(0, (player ? player.level : 1) - 1) * BALANCE.gemXpPerLevel;
                     if (this.type === 'boss') {
                         const xpNeeded = Math.max(1, player.nextXp - player.xp);
@@ -1148,6 +1212,12 @@
                     if (this.type === 'splitter') {
                         enemies.push(new Enemy('miniSplitter', this.x - 10, this.y));
                         enemies.push(new Enemy('miniSplitter', this.x + 10, this.y));
+                    }
+
+                    // 击杀回血（Boss 更多）
+                    if (player && player.hp > 0) {
+                        const heal = this.type === 'boss' ? BALANCE.hpPerBossKill : BALANCE.hpPerKill;
+                        player.hp = Math.min(player.maxHp, player.hp + heal);
                     }
 
                     const scoreMult = difficulty === 'easy' ? 1 : (difficulty === 'hard' ? 2 : 1.5);
@@ -1285,10 +1355,10 @@
               apply: () => player.magnetRadius *= 1.4 },
             { id: 'heal', icon: '❤️',
               name: { 'zh-Hant': '核心修復', en: 'Core Repair' },
-              desc: { 'zh-Hant': '立即恢復 50% 生命值並提升血量上限', en: 'Restore 50% HP & Raise Max HP' },
+              desc: { 'zh-Hant': '立即恢復 60% 生命值並提升 25 點血量上限', en: 'Restore 60% HP & Raise Max HP by 25' },
               apply: () => {
-                  player.maxHp += 20;
-                  player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5);
+                  player.maxHp += 25;
+                  player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.6);
               } }
         ];
 
@@ -1338,7 +1408,6 @@
         });
         window.addEventListener('keyup', e => keys[e.key] = false);
 
-        // --- 觸控：根據瞄準模式決定搖桿激活範圍 ---
         window.addEventListener('touchstart', e => {
             if (!isGameRunning || isPaused) return;
             if (isUIElement(e.target) || isScrollableTarget(e.target)) return;
@@ -1349,14 +1418,12 @@
                 const half = canvas.width / 2;
 
                 if (aimMode === 'auto') {
-                    // 自動瞄準：整個屏幕都可召喚移動搖桿
                     if (!moveJoystick.active) {
                         activateJoystick(moveJoystick, x, y, touch.identifier, false);
                         updateJoystickFromPoint(moveJoystick, x, y);
                         e.preventDefault();
                     }
                 } else {
-                    // 手動瞄準：按左右手模式分半屏
                     const inMoveHalf = (handMode === 'right') ? (x > half) : (x < half);
                     const inAimHalf = (handMode === 'right') ? (x < half) : (x > half);
 
@@ -1398,7 +1465,6 @@
         window.addEventListener('touchend', handleTouchEnd, { passive: false });
         window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-        // --- 滑鼠：左鍵點擊召喚搖桿（桌面測試用） ---
         window.addEventListener('mousedown', e => {
             if (!isGameRunning || isPaused) return;
             if (isUIElement(e.target) || isScrollableTarget(e.target)) return;
@@ -1455,10 +1521,11 @@
                 enemies.push(new Enemy('boss', bx, by));
             }
 
-            const spawnRate = Math.max(0.3, 1.8 - Math.floor(gameTime / 15) * 0.15);
+            // 刷怪更密集，随时间逐步加速
+            const spawnRate = Math.max(0.3, 1.3 - Math.floor(gameTime / 20) * 0.09);
             const diffRate = difficulty === 'easy' ? 1.3 : (difficulty === 'hard' ? 0.7 : 1.0);
             const lv = (player && player.level) ? player.level : 1;
-            const lvSpawnBoost = Math.min(BALANCE.spawnRateLvBoostCap, Math.max(0, lv - 1) * 0.01);
+            const lvSpawnBoost = Math.min(BALANCE.spawnRateLvBoostCap, Math.max(0, lv - 1) * 0.012);
             const effectiveSpawnRate = spawnRate * diffRate * (1 - lvSpawnBoost);
 
             if (Math.random() < (dt / Math.max(0.2, effectiveSpawnRate))) {
@@ -1607,7 +1674,9 @@
                         if (enemy.markedForDeletion) continue;
                         const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
                         if (dist < player.radius + enemy.radius) {
-                            player.hp -= 0.4 * dt * 60;
+                            const isBoss = enemy.type === 'boss';
+                            const dps = (isBoss ? BALANCE.bossBodyDamagePerSec : BALANCE.bodyDamagePerSec) * enemy.damageMult;
+                            player.hp -= dps * dt;
                             player.hitFlash = 1.0;
                             if (player.hp <= 0) { gameOver(); break; }
                         }
@@ -1780,7 +1849,6 @@
             returnToMainMenu();
         });
 
-        // ===== 快速保存到本地（localStorage） =====
         let localSaveResetTimer = null;
         localSaveBtn.addEventListener('click', () => {
             if (!isGameRunning || !player || player.hp <= 0) {
