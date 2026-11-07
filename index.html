@@ -181,8 +181,8 @@
                     <p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。注意：火力與射速升級的收益會隨選擇次數遞減。</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
-                    <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與精英威脅</h3>
-                    <p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），後期放緩（每級約 30～50 隻）。普通敵人成長平緩，但 30 級後出現的金色精英會成為真正威脅：血量極厚、攻擊高、速度快，對光刃有 50% 抗性，死亡時還會範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英，不能只靠光刃圍圈。</p>
+                    <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與平滑難度曲線</h3>
+                    <p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。30 級後出現的金色精英仍是大後期真正威脅：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英。</p>
                 </div>
                 <div class="space-y-2">
                     <h3 id="codexEnemiesTitle" class="font-bold text-rose-400 uppercase tracking-wider text-[11px]">👾 敵方威脅圖鑑</h3>
@@ -378,26 +378,32 @@
         }, { passive: false });
 
         /* =========================================================
-           平衡参数：普通敌人成长平缓，精英怪成为大后期真正威胁
+           平衡参数：难度适中，平滑曲线
+           - 经验：衰减 4%/级，最低 3%，23 级约 16 只升级
+           - 刷怪：基础 1.4 秒，随时间降到 0.3 秒下限
+           - 血量：线性到 25 级（+6%/级），之后指数
+           - 攻击：线性到 35 级（+1.2%/级），之后指数
+           - 时间压力：+6%/分钟，上限 +120%
+           - 精英：30 级后出现，血量 ×4～6、攻击 ×2、光刃 50% 抗性
            ========================================================= */
         const BALANCE = {
             enemyHpCurve: {
-                linearPhaseMaxLevel: 20,
-                linearPerLevel: 0.07,
+                linearPhaseMaxLevel: 25,
+                linearPerLevel: 0.06,
                 expBase: 1.06,
                 expMultiplier: 0.55
             },
             enemyDmgCurve: {
-                linearPhaseMaxLevel: 30,
-                linearPerLevel: 0.015,
+                linearPhaseMaxLevel: 35,
+                linearPerLevel: 0.012,
                 expBase: 1.02,
                 expMultiplier: 0.5
             },
             enemySpeedPerLevel: 0.01,
             enemySpeedCap: 1.35,
 
-            timePressurePerMinute: 0.08,
-            timePressureCap: 1.5,
+            timePressurePerMinute: 0.06,
+            timePressureCap: 1.2,
 
             hpPerKill: 0.8,
             hpPerBossKill: 30,
@@ -426,7 +432,7 @@
             eliteDmgMult: 2.0,
             eliteRadiusMult: 1.5,
             eliteSpeedBonus: 1.3,
-            eliteBladeResist: 0.5,           // 对光刃伤害有 50% 抗性
+            eliteBladeResist: 0.5,
             eliteDeathExplosionDamage: 30,
             eliteDeathExplosionRadius: 130,
             eliteXpMult: 3,
@@ -442,8 +448,8 @@
 
             xpCurve: {
                 basePercent: 0.15,
-                decayPerLevel: 0.94,
-                minPercent: 0.02,
+                decayPerLevel: 0.96,
+                minPercent: 0.03,
                 typeMultiplier: {
                     chaser: 1.0,
                     speeder: 1.15,
@@ -608,8 +614,8 @@
                 guideHandDesc: '右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。',
                 guideUpgradesTitle: '⭐ 無限疊加升級',
                 guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。注意：火力與射速升級的收益會隨選擇次數遞減。',
-                guideScalingTitle: '📈 爽快割草與精英威脅',
-                guideScalingDesc: '經驗曲線前期非常快（每級約 5～10 隻），後期放緩（每級約 30～50 隻）。普通敵人成長平緩，但 30 級後出現的金色精英會成為真正威脅：血量極厚、攻擊高、速度快，對光刃有 50% 抗性，死亡時還會範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英，不能只靠光刃圍圈。',
+                guideScalingTitle: '📈 爽快割草與平滑難度曲線',
+                guideScalingDesc: '經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。30 級後出現的金色精英仍是大後期真正威脅：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英。',
                 codexEnemiesTitle: '👾 敵方威脅圖鑑',
                 enemyChaserTitle: 'Chaser (追擊者)', enemyChaserDesc: '數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',
                 enemySpeederTitle: 'Speeder (疾速突擊者)', enemySpeederDesc: '生命值較低但移動速度極快，考量玩家反應速度。',
@@ -653,8 +659,8 @@
                 guideHandDesc: 'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right. This split only applies in Manual Aim mode.',
                 guideUpgradesTitle: '⭐ Stackable Upgrades',
                 guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely! Orbiting plasma blades also intercept incoming enemy bullets. Note: damage and fire-rate upgrades have diminishing returns.',
-                guideScalingTitle: '📈 Power Fantasy & Elite Threats',
-                guideScalingDesc: 'XP comes fast early (about 5–10 kills per level) and slows later (about 30–50 kills per level). Normal enemies scale gently, but golden Elites appear after level 30 and become the real threat: massive HP, high damage, faster movement, 50% resistance to blades, and a death explosion. In late game you must dodge and focus-fire with your cannon and drones — blade rings alone won\'t cut it.',
+                guideScalingTitle: '📈 Smooth Power Curve',
+                guideScalingDesc: 'XP comes fast early (5–10 kills per level), moderate at level 23 (about 16 kills), then stabilizes around 33 kills late game — no sudden spikes. Normal enemy HP scales linearly to level 25 (+6%/level), damage linearly to level 35 (+1.2%/level), then switches to a gentle exponential. Golden Elites still appear after level 30 as the real late-game threat: massive HP (×4–6), ×2 damage, 1.3× speed, 50% blade resistance, and a death explosion. Focus-fire them with your cannon and drones.',
                 codexEnemiesTitle: '👾 Enemy Threats Codex',
                 enemyChaserTitle: 'Chaser', enemyChaserDesc: 'Basic chasers that swarm directly towards the core.',
                 enemySpeederTitle: 'Speeder', enemySpeederDesc: 'Fast moving low-HP harassers requiring quick reflexes.',
@@ -1270,7 +1276,6 @@
                     const now = performance.now() / 1000;
                     if (now - this.lastShotTime >= BALANCE.sniperInterval) {
                         const dmg = BALANCE.sniperBulletDamage * this.damageMult;
-                        // 精英狙击手发射金色子弹（仍可被光刃拦截）
                         const bulletColor = this.isElite ? '#fbbf24' : '#14b8a6';
                         const bulletSize = this.isElite ? 4.5 : 4;
                         enemyBullets.push(new Bullet(this.x, this.y, angle, dmg, bulletSize, bulletColor));
@@ -1309,7 +1314,6 @@
                     createParticles(this.x, this.y, this.color, this.isElite ? 16 : 8);
                     totalKills++;
 
-                    // 精英死亡：范围爆炸伤害（惩罚贴身站桩）
                     if (this.isElite) {
                         createParticles(this.x, this.y, '#fbbf24', 30);
                         if (player && Math.hypot(player.x - this.x, player.y - this.y) < BALANCE.eliteDeathExplosionRadius) {
@@ -1347,7 +1351,6 @@
                         enemies.push(new Enemy('miniSplitter', this.x + 10, this.y));
                     }
 
-                    // 击杀回血（精英回血倍率较低，避免靠杀精英抵消爆炸伤害）
                     if (player && player.hp > 0) {
                         const healMult = getHealMult(player.level || 1);
                         const baseHeal = this.type === 'boss' ? BALANCE.hpPerBossKill : BALANCE.hpPerKill;
@@ -1365,7 +1368,6 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
 
-                // 精英光环
                 if (this.isElite) {
                     ctx.beginPath();
                     ctx.arc(0, 0, this.radius + 6 + Math.sin(performance.now() / 200) * 2, 0, Math.PI * 2);
@@ -1676,13 +1678,13 @@
                 enemies.push(new Enemy('boss', bx, by));
             }
 
-            const spawnRate = Math.max(0.25, 1.3 - Math.floor(gameTime / 30) * 0.08);
+            const spawnRate = Math.max(0.3, 1.4 - Math.floor(gameTime / 30) * 0.07);
             const diffRate = difficulty === 'easy' ? 1.3 : (difficulty === 'hard' ? 0.7 : 1.0);
             const lv = (player && player.level) ? player.level : 1;
-            const lvSpawnBoost = Math.min(0.5, Math.max(0, lv - 1) * 0.012);
+            const lvSpawnBoost = Math.min(0.35, Math.max(0, lv - 1) * 0.008);
             const effectiveSpawnRate = spawnRate * diffRate * (1 - lvSpawnBoost);
 
-            if (Math.random() < (dt / Math.max(0.15, effectiveSpawnRate))) {
+            if (Math.random() < (dt / Math.max(0.3, effectiveSpawnRate))) {
                 const side = Math.floor(Math.random() * 4);
                 const ex = side === 0 ? -20 : (side === 1 ? canvas.width + 20 : Math.random() * canvas.width);
                 const ey = side === 2 ? -20 : (side === 3 ? canvas.height + 20 : Math.random() * canvas.height);
