@@ -178,11 +178,11 @@
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideUpgradesTitle" class="font-bold text-amber-300">⭐ 無限疊加升級</h3>
-                    <p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。</p>
+                    <p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。注意：火力與射速升級的收益會隨選擇次數遞減。</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
-                    <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與持續壓力</h3>
-                    <p id="guideScalingDesc">割草回血讓你能維持節奏，但敵人會隨時間與你的等級變強：攻擊力更高、血量更厚、刷怪更密。Boss 與狙擊手必須靠走位躲避，秒殺 Boss 可直接升一級。活下來，才有爽感。</p>
+                    <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與精英威脅</h3>
+                    <p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），後期放緩（每級約 30～50 隻）。普通敵人成長平緩，但 30 級後出現的金色精英會成為真正威脅：血量極厚、攻擊高、速度快，對光刃有 50% 抗性，死亡時還會範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英，不能只靠光刃圍圈。</p>
                 </div>
                 <div class="space-y-2">
                     <h3 id="codexEnemiesTitle" class="font-bold text-rose-400 uppercase tracking-wider text-[11px]">👾 敵方威脅圖鑑</h3>
@@ -220,6 +220,13 @@
                             <div>
                                 <h4 id="enemyTankTitle" class="font-bold text-emerald-400">Tank (重裝坦克)</h4>
                                 <p id="enemyTankDesc" class="text-[11px] text-slate-400">擁有龐大生命值與防禦，能阻擋大量的火力發射。</p>
+                            </div>
+                        </div>
+                        <div class="p-2.5 bg-slate-900/40 rounded-lg border border-amber-400/30 flex items-start space-x-3">
+                            <span class="text-lg">⭐</span>
+                            <div>
+                                <h4 id="enemyEliteTitle" class="font-bold text-amber-300">Elite (精英敵人)</h4>
+                                <p id="enemyEliteDesc" class="text-[11px] text-slate-400">30 級後出現的金色精英：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。精英狙擊手發射金色子彈，但仍可被光刃攔截。</p>
                             </div>
                         </div>
                     </div>
@@ -371,34 +378,116 @@
         }, { passive: false });
 
         /* =========================================================
-           平衡参数：爽玩，但不可以太简单
+           平衡参数：普通敌人成长平缓，精英怪成为大后期真正威胁
            ========================================================= */
         const BALANCE = {
-            enemyHpPerLevel: 0.075,
-            enemySpeedPerLevel: 0.012,
+            enemyHpCurve: {
+                linearPhaseMaxLevel: 20,
+                linearPerLevel: 0.07,
+                expBase: 1.06,
+                expMultiplier: 0.55
+            },
+            enemyDmgCurve: {
+                linearPhaseMaxLevel: 30,
+                linearPerLevel: 0.015,
+                expBase: 1.02,
+                expMultiplier: 0.5
+            },
+            enemySpeedPerLevel: 0.01,
             enemySpeedCap: 1.35,
-            gemXpPerLevel: 0.15,
-            spawnRateLvBoostCap: 0.50,
 
-            timePressurePerMinute: 0.06,
-            timePressureCap: 0.60,
+            timePressurePerMinute: 0.08,
+            timePressureCap: 1.5,
 
-            hpPerKill: 0.35,
-            hpPerBossKill: 20,
+            hpPerKill: 0.8,
+            hpPerBossKill: 30,
+            healDecayPerLevel: 0.004,
+            healMinMult: 0.4,
 
-            bodyDamagePerSec: 14,
-            bossBodyDamagePerSec: 18,
+            bodyDamagePerSec: 12,
+            bossBodyDamagePerSec: 16,
 
-            sniperBulletDamage: 10,
+            sniperBulletDamage: 8,
             sniperInterval: 2.2,
 
-            bossBurstDamage: 8,
+            bossBurstDamage: 6,
             bossBurstInterval: 2.8,
             bossBurstCount: 10,
+            bossHpBonusPerLevel: 0.08,
 
-            // 光刃拦截半径（视觉刀片半宽约 14）
-            bladeBlockRadius: 14
+            bladeBlockRadius: 14,
+
+            /* ===== 精英强化：大后期核心威胁 ===== */
+            eliteStartLevel: 30,
+            eliteChanceLow: 0.12,
+            eliteChanceHigh: 0.22,
+            eliteHpMultLow: 4,
+            eliteHpMultHigh: 6,
+            eliteDmgMult: 2.0,
+            eliteRadiusMult: 1.5,
+            eliteSpeedBonus: 1.3,
+            eliteBladeResist: 0.5,           // 对光刃伤害有 50% 抗性
+            eliteDeathExplosionDamage: 30,
+            eliteDeathExplosionRadius: 130,
+            eliteXpMult: 3,
+            eliteHealMult: 0.5,
+            /* ================================= */
+
+            damageMultMax: 1.35,
+            damageMultDecay: 0.015,
+            damageMultFloor: 1.20,
+            fireRateMultMax: 1.25,
+            fireRateMultDecay: 0.012,
+            fireRateMultFloor: 1.12,
+
+            xpCurve: {
+                basePercent: 0.15,
+                decayPerLevel: 0.94,
+                minPercent: 0.02,
+                typeMultiplier: {
+                    chaser: 1.0,
+                    speeder: 1.15,
+                    splitter: 1.5,
+                    miniSplitter: 0.5,
+                    sniper: 1.3,
+                    tank: 2.0
+                }
+            }
         };
+
+        function getEnemyHpScale(lv) {
+            const c = BALANCE.enemyHpCurve;
+            if (lv <= c.linearPhaseMaxLevel) {
+                return 1 + (lv - 1) * c.linearPerLevel;
+            }
+            const baseScale = 1 + (c.linearPhaseMaxLevel - 1) * c.linearPerLevel;
+            const expLevels = lv - c.linearPhaseMaxLevel;
+            return baseScale * Math.pow(c.expBase, expLevels * c.expMultiplier);
+        }
+
+        function getEnemyDmgScale(lv) {
+            const c = BALANCE.enemyDmgCurve;
+            if (lv <= c.linearPhaseMaxLevel) {
+                return 1 + (lv - 1) * c.linearPerLevel;
+            }
+            const baseScale = 1 + (c.linearPhaseMaxLevel - 1) * c.linearPerLevel;
+            const expLevels = lv - c.linearPhaseMaxLevel;
+            return baseScale * Math.pow(c.expBase, expLevels * c.expMultiplier);
+        }
+
+        function getHealMult(lv) {
+            return Math.max(BALANCE.healMinMult, 1 - (lv - 1) * BALANCE.healDecayPerLevel);
+        }
+
+        function getXpGemValue(enemyType, level, nextXp, isElite) {
+            const cfg = BALANCE.xpCurve;
+            const lvFactor = Math.max(0, (level || 1) - 1);
+            const basePct = cfg.basePercent * Math.pow(cfg.decayPerLevel, lvFactor);
+            const pct = Math.max(cfg.minPercent, basePct);
+            const typeMult = cfg.typeMultiplier[enemyType] || 1;
+            const eliteMult = isElite ? BALANCE.eliteXpMult : 1;
+            return Math.max(1, Math.round((nextXp || 10) * pct * typeMult * eliteMult));
+        }
 
         /* ---------------- AUDIO ---------------- */
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -518,15 +607,16 @@
                 guideHandTitle: '🤚 左右手模式',
                 guideHandDesc: '右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。',
                 guideUpgradesTitle: '⭐ 無限疊加升級',
-                guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。',
-                guideScalingTitle: '📈 爽快割草與持續壓力',
-                guideScalingDesc: '割草回血讓你能維持節奏，但敵人會隨時間與你的等級變強：攻擊力更高、血量更厚、刷怪更密。Boss 與狙擊手必須靠走位躲避，秒殺 Boss 可直接升一級。活下來，才有爽感。',
+                guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。注意：火力與射速升級的收益會隨選擇次數遞減。',
+                guideScalingTitle: '📈 爽快割草與精英威脅',
+                guideScalingDesc: '經驗曲線前期非常快（每級約 5～10 隻），後期放緩（每級約 30～50 隻）。普通敵人成長平緩，但 30 級後出現的金色精英會成為真正威脅：血量極厚、攻擊高、速度快，對光刃有 50% 抗性，死亡時還會範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英，不能只靠光刃圍圈。',
                 codexEnemiesTitle: '👾 敵方威脅圖鑑',
                 enemyChaserTitle: 'Chaser (追擊者)', enemyChaserDesc: '數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',
                 enemySpeederTitle: 'Speeder (疾速突擊者)', enemySpeederDesc: '生命值較低但移動速度極快，考量玩家反應速度。',
                 enemySplitterTitle: 'Splitter (裂變體)', enemySplitterDesc: '體型較大，被擊破時會迅速分裂成兩個高速小裂變體。',
                 enemySniperTitle: 'Sniper (遠程狙擊手)', enemySniperDesc: '會與玩家保持距離，並定期發射高速能量彈幕。',
                 enemyTankTitle: 'Tank (重裝坦克)', enemyTankDesc: '擁有龐大生命值與防禦，能阻擋大量的火力發射。',
+                enemyEliteTitle: 'Elite (精英敵人)', enemyEliteDesc: '30 級後出現的金色精英：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。精英狙擊手發射金色子彈，但仍可被光刃攔截。',
                 closeGuideBtnText: '關閉圖鑑',
                 quitModalTitle: '確定退出遊戲？', quitModalDesc: '未複製存檔碼的當前進度將會遺失。',
                 cancelQuitBtnText: '取消', confirmQuitBtnText: '確定退出',
@@ -562,15 +652,16 @@
                 guideHandTitle: '🤚 Hand Modes',
                 guideHandDesc: 'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right. This split only applies in Manual Aim mode.',
                 guideUpgradesTitle: '⭐ Stackable Upgrades',
-                guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely! Orbiting plasma blades also intercept incoming enemy bullets.',
-                guideScalingTitle: '📈 Power Fantasy Meets Real Pressure',
-                guideScalingDesc: 'Kills heal you, keeping the loop going — but enemies grow stronger over time and with your level: more HP, more damage, denser waves. Bosses and snipers demand active dodging. Kill a Boss for an instant level. Survive, and the power fantasy follows.',
+                guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely! Orbiting plasma blades also intercept incoming enemy bullets. Note: damage and fire-rate upgrades have diminishing returns.',
+                guideScalingTitle: '📈 Power Fantasy & Elite Threats',
+                guideScalingDesc: 'XP comes fast early (about 5–10 kills per level) and slows later (about 30–50 kills per level). Normal enemies scale gently, but golden Elites appear after level 30 and become the real threat: massive HP, high damage, faster movement, 50% resistance to blades, and a death explosion. In late game you must dodge and focus-fire with your cannon and drones — blade rings alone won\'t cut it.',
                 codexEnemiesTitle: '👾 Enemy Threats Codex',
                 enemyChaserTitle: 'Chaser', enemyChaserDesc: 'Basic chasers that swarm directly towards the core.',
                 enemySpeederTitle: 'Speeder', enemySpeederDesc: 'Fast moving low-HP harassers requiring quick reflexes.',
                 enemySplitterTitle: 'Splitter', enemySplitterDesc: 'Splits into two mini splitters upon destruction.',
                 enemySniperTitle: 'Sniper', enemySniperDesc: 'Keeps distance and fires high-velocity laser rounds.',
                 enemyTankTitle: 'Tank', enemyTankDesc: 'High durability brute that tanks oncoming bullets.',
+                enemyEliteTitle: 'Elite', enemyEliteDesc: 'Golden elites appearing after level 30: enormous HP (×4–6), ×2 damage, 1.3× speed, 50% resistance to blades, and a death explosion. Elite sniper bullets are golden but can still be intercepted by blades.',
                 closeGuideBtnText: 'Close Codex',
                 quitModalTitle: 'QUIT GAME?', quitModalDesc: 'Unsaved progress will be lost.',
                 cancelQuitBtnText: 'Cancel', confirmQuitBtnText: 'Confirm Quit',
@@ -864,6 +955,9 @@
                 this.blades = 0;
                 this.bladeAngle = 0;
 
+                this.damageUpgradeCount = 0;
+                this.fireRateUpgradeCount = 0;
+
                 this.hitFlash = 0;
             }
 
@@ -894,7 +988,7 @@
 
                 if (this.hitFlash > 0) this.hitFlash -= dt * 5;
 
-                // ===== 等離子光刃：傷害敵人 + 攔截敵方子彈 =====
+                // 光刃：伤害敌人 + 拦截子弹（精英对光刃有抗性，但子弹仍可拦截）
                 if (this.blades > 0) {
                     this.bladeAngle += dt * 2.5;
                     const bladeOrbitRadius = 65;
@@ -903,18 +997,17 @@
                         const bx = this.x + Math.cos(angle) * bladeOrbitRadius;
                         const by = this.y + Math.sin(angle) * bladeOrbitRadius;
 
-                        // 伤害敌人（反向遍历，分裂体 push 安全）
                         for (let j = enemies.length - 1; j >= 0; j--) {
                             const enemy = enemies[j];
                             if (enemy.markedForDeletion) continue;
                             const edist = Math.hypot(enemy.x - bx, enemy.y - by);
                             if (edist < enemy.radius + 12) {
-                                enemy.takeDamage(this.damage * 0.4 * dt * 60);
+                                const bladeDmgMult = enemy.isElite ? (1 - BALANCE.eliteBladeResist) : 1;
+                                enemy.takeDamage(this.damage * 0.4 * dt * 60 * bladeDmgMult);
                                 createParticles(bx, by, '#38bdf8', 2);
                             }
                         }
 
-                        // 拦截敌方子弹
                         for (let k = enemyBullets.length - 1; k >= 0; k--) {
                             const eb = enemyBullets[k];
                             if (eb.markedForDeletion) continue;
@@ -1107,6 +1200,7 @@
                 this.x = x; this.y = y;
                 this.markedForDeletion = false;
                 this.lastShotTime = 0;
+                this.isElite = false;
 
                 if (type === 'chaser') { this.radius = 12; this.speed = 2.4; this.maxHp = 30; this.color = '#ef4444'; this.xpValue = 2; }
                 else if (type === 'speeder') { this.radius = 9; this.speed = 4.5; this.maxHp = 18; this.color = '#f97316'; this.xpValue = 3; }
@@ -1116,27 +1210,49 @@
                 else if (type === 'tank') { this.radius = 24; this.speed = 1.1; this.maxHp = 160; this.color = '#10b981'; this.xpValue = 10; }
                 else if (type === 'boss') { this.radius = 45; this.speed = 0.8; this.maxHp = 1200; this.color = '#f43f5e'; this.xpValue = 100; }
 
-                const diffHpMult = difficulty === 'easy' ? 0.75 : (difficulty === 'hard' ? 1.4 : 1.0);
-                const diffDmgMult = difficulty === 'easy' ? 0.8 : (difficulty === 'hard' ? 1.25 : 1.0);
+                const diffHpMult = difficulty === 'easy' ? 0.65 : (difficulty === 'hard' ? 1.25 : 1.0);
+                const diffDmgMult = difficulty === 'easy' ? 0.7 : (difficulty === 'hard' ? 1.15 : 1.0);
                 this.damageMult = diffDmgMult;
                 this.maxHp = Math.floor(this.maxHp * diffHpMult);
 
                 const lv = (player && player.level) ? player.level : 1;
-                const hpScale = 1 + Math.max(0, lv - 1) * BALANCE.enemyHpPerLevel;
-                const spdScale = Math.min(BALANCE.enemySpeedCap, 1 + Math.max(0, lv - 1) * BALANCE.enemySpeedPerLevel);
 
-                const timePressure = Math.min(BALANCE.timePressureCap, Math.floor(gameTime / 60) * BALANCE.timePressurePerMinute);
+                const hpScale = getEnemyHpScale(lv);
+                const spdScale = Math.min(BALANCE.enemySpeedCap, 1 + Math.max(0, lv - 1) * BALANCE.enemySpeedPerLevel);
+                const dmgScale = getEnemyDmgScale(lv);
+
+                const timePressure = Math.min(
+                    BALANCE.timePressureCap,
+                    Math.floor(gameTime / 60) * BALANCE.timePressurePerMinute
+                );
 
                 this.maxHp = Math.floor(this.maxHp * hpScale * (1 + timePressure));
-                this.speed *= spdScale * (1 + timePressure * 0.15);
-                this.damageMult *= (1 + timePressure);
+                this.speed *= spdScale * (1 + timePressure * 0.12);
+                this.damageMult *= dmgScale * (1 + timePressure * 0.5);
+
+                if (type === 'boss') {
+                    const bossLvBonus = 1 + Math.max(0, lv - 1) * BALANCE.bossHpBonusPerLevel;
+                    this.maxHp = Math.floor(this.maxHp * bossLvBonus);
+                    this.lastShotTime = performance.now() / 1000 + 1.8;
+                }
+
+                // 精英化（Boss 不参与）
+                if (type !== 'boss' && lv >= BALANCE.eliteStartLevel) {
+                    const eliteChance = lv >= 60 ? BALANCE.eliteChanceHigh : BALANCE.eliteChanceLow;
+                    if (Math.random() < eliteChance) {
+                        this.isElite = true;
+                        const hpMult = lv >= 60 ? BALANCE.eliteHpMultHigh : BALANCE.eliteHpMultLow;
+                        this.maxHp = Math.floor(this.maxHp * hpMult);
+                        this.damageMult *= BALANCE.eliteDmgMult;
+                        this.radius *= BALANCE.eliteRadiusMult;
+                        this.speed *= BALANCE.eliteSpeedBonus;
+                        this.color = '#fbbf24';
+                        this.xpValue *= 3;
+                    }
+                }
 
                 this.maxHp = Math.max(1, this.maxHp);
                 this.hp = this.maxHp;
-
-                if (type === 'boss') {
-                    this.lastShotTime = performance.now() / 1000 + 1.8;
-                }
             }
 
             update(dt) {
@@ -1154,18 +1270,25 @@
                     const now = performance.now() / 1000;
                     if (now - this.lastShotTime >= BALANCE.sniperInterval) {
                         const dmg = BALANCE.sniperBulletDamage * this.damageMult;
-                        enemyBullets.push(new Bullet(this.x, this.y, angle, dmg, 4, '#14b8a6'));
+                        // 精英狙击手发射金色子弹（仍可被光刃拦截）
+                        const bulletColor = this.isElite ? '#fbbf24' : '#14b8a6';
+                        const bulletSize = this.isElite ? 4.5 : 4;
+                        enemyBullets.push(new Bullet(this.x, this.y, angle, dmg, bulletSize, bulletColor));
                         this.lastShotTime = now;
                     }
                 } else if (this.type === 'boss') {
                     this.x += Math.cos(angle) * this.speed * dt * 60;
                     this.y += Math.sin(angle) * this.speed * dt * 60;
 
+                    const lv = player ? player.level : 1;
+                    const burstInterval = Math.max(1.8, BALANCE.bossBurstInterval - lv * 0.01);
+                    const burstCount = BALANCE.bossBurstCount + Math.floor(lv / 20);
+
                     const now = performance.now() / 1000;
-                    if (now - this.lastShotTime >= BALANCE.bossBurstInterval) {
+                    if (now - this.lastShotTime >= burstInterval) {
                         const dmg = BALANCE.bossBurstDamage * this.damageMult;
-                        for (let i = 0; i < BALANCE.bossBurstCount; i++) {
-                            const a = (i / BALANCE.bossBurstCount) * Math.PI * 2 + now * 0.6;
+                        for (let i = 0; i < burstCount; i++) {
+                            const a = (i / burstCount) * Math.PI * 2 + now * 0.6;
                             enemyBullets.push(new Bullet(this.x, this.y, a, dmg, 4, '#f43f5e'));
                         }
                         this.lastShotTime = now;
@@ -1183,10 +1306,22 @@
                 if (this.hp <= 0) {
                     this.markedForDeletion = true;
                     playSound('explosion');
-                    createParticles(this.x, this.y, this.color, 8);
+                    createParticles(this.x, this.y, this.color, this.isElite ? 16 : 8);
                     totalKills++;
 
-                    const xpScale = 1 + Math.max(0, (player ? player.level : 1) - 1) * BALANCE.gemXpPerLevel;
+                    // 精英死亡：范围爆炸伤害（惩罚贴身站桩）
+                    if (this.isElite) {
+                        createParticles(this.x, this.y, '#fbbf24', 30);
+                        if (player && Math.hypot(player.x - this.x, player.y - this.y) < BALANCE.eliteDeathExplosionRadius) {
+                            player.hp -= BALANCE.eliteDeathExplosionDamage;
+                            player.hitFlash = 1.0;
+                            playSound('explosion');
+                            if (player.hp <= 0 && isGameRunning) {
+                                gameOver();
+                            }
+                        }
+                    }
+
                     if (this.type === 'boss') {
                         const xpNeeded = Math.max(1, player.nextXp - player.xp);
                         const dropCount = 15;
@@ -1198,7 +1333,12 @@
                         }
                         createParticles(this.x, this.y, '#fbbf24', 24);
                     } else {
-                        const gemValue = Math.max(1, this.xpValue * xpScale);
+                        const gemValue = getXpGemValue(
+                            this.type,
+                            player ? player.level : 1,
+                            player ? player.nextXp : 10,
+                            this.isElite
+                        );
                         gems.push(new Gem(this.x, this.y, gemValue));
                     }
 
@@ -1207,13 +1347,16 @@
                         enemies.push(new Enemy('miniSplitter', this.x + 10, this.y));
                     }
 
+                    // 击杀回血（精英回血倍率较低，避免靠杀精英抵消爆炸伤害）
                     if (player && player.hp > 0) {
-                        const heal = this.type === 'boss' ? BALANCE.hpPerBossKill : BALANCE.hpPerKill;
+                        const healMult = getHealMult(player.level || 1);
+                        const baseHeal = this.type === 'boss' ? BALANCE.hpPerBossKill : BALANCE.hpPerKill;
+                        const heal = baseHeal * healMult * (this.isElite ? BALANCE.eliteHealMult : 1);
                         player.hp = Math.min(player.maxHp, player.hp + heal);
                     }
 
                     const scoreMult = difficulty === 'easy' ? 1 : (difficulty === 'hard' ? 2 : 1.5);
-                    score += Math.floor(this.xpValue * 10 * scoreMult);
+                    score += Math.floor(this.xpValue * 10 * scoreMult * (this.isElite ? 3 : 1));
                     updateHUD();
                 }
             }
@@ -1221,11 +1364,21 @@
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
+
+                // 精英光环
+                if (this.isElite) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius + 6 + Math.sin(performance.now() / 200) * 2, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.75)';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                }
+
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.shadowColor = this.color;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = this.isElite ? 24 : 10;
                 ctx.fill();
 
                 if (this.hp < this.maxHp) {
@@ -1233,7 +1386,7 @@
                     const hpPercent = Math.max(0, this.hp / this.maxHp);
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
                     ctx.fillRect(-this.radius, -this.radius - 8, barWidth, 4);
-                    ctx.fillStyle = '#ef4444';
+                    ctx.fillStyle = this.isElite ? '#fbbf24' : '#ef4444';
                     ctx.fillRect(-this.radius, -this.radius - 8, barWidth * hpPercent, 4);
                 }
                 ctx.restore();
@@ -1323,7 +1476,7 @@
               apply: () => player.drones++ },
             { id: 'blade', icon: '⚔️',
               name: { 'zh-Hant': '等離子光刃', en: 'Plasma Blade' },
-              desc: { 'zh-Hant': '+1把旋轉光刃，可傷害敵人並攔截敵方子彈（可無上限疊加）', en: '+1 Orbiting Blade that damages enemies and intercepts enemy bullets (Stackable)' },
+              desc: { 'zh-Hant': '+1把旋轉光刃，可傷害敵人並攔截敵方子彈（精英對光刃有 50% 抗性）', en: '+1 Orbiting Blade that damages enemies and intercepts enemy bullets (Elites have 50% blade resistance)' },
               apply: () => player.blades++ },
             { id: 'multishot', icon: '🔱',
               name: { 'zh-Hant': '多重發射', en: 'Multishot' },
@@ -1331,12 +1484,22 @@
               apply: () => player.multishot++ },
             { id: 'damage', icon: '💥',
               name: { 'zh-Hant': '火力強化', en: 'Damage Boost' },
-              desc: { 'zh-Hant': '基礎砲擊傷害增加 35%', en: 'Increase Bullet Damage by 35%' },
-              apply: () => player.damage *= 1.35 },
+              desc: { 'zh-Hant': '增加基礎砲擊傷害（選擇次數越多，收益越低，最低 ×1.20）', en: 'Increase bullet damage (diminishing returns, minimum ×1.20)' },
+              apply: () => {
+                  const count = player.damageUpgradeCount || 0;
+                  const mult = Math.max(BALANCE.damageMultFloor, BALANCE.damageMultMax - count * BALANCE.damageMultDecay);
+                  player.damage *= mult;
+                  player.damageUpgradeCount = count + 1;
+              } },
             { id: 'fireRate', icon: '⚡',
               name: { 'zh-Hant': '過載射速', en: 'Overdrive Fire Rate' },
-              desc: { 'zh-Hant': '提升 25% 砲擊頻率', en: 'Increase Fire Rate by 25%' },
-              apply: () => player.fireRate *= 1.25 },
+              desc: { 'zh-Hant': '提升砲擊頻率（選擇次數越多，收益越低，最低 ×1.12）', en: 'Increase fire rate (diminishing returns, minimum ×1.12)' },
+              apply: () => {
+                  const count = player.fireRateUpgradeCount || 0;
+                  const mult = Math.max(BALANCE.fireRateMultFloor, BALANCE.fireRateMultMax - count * BALANCE.fireRateMultDecay);
+                  player.fireRate *= mult;
+                  player.fireRateUpgradeCount = count + 1;
+              } },
             { id: 'speed', icon: '👟',
               name: { 'zh-Hant': '推進引擎', en: 'Thruster Engine' },
               desc: { 'zh-Hant': '提升 20% 核心移動速度', en: 'Increase Move Speed by 20%' },
@@ -1513,13 +1676,13 @@
                 enemies.push(new Enemy('boss', bx, by));
             }
 
-            const spawnRate = Math.max(0.3, 1.3 - Math.floor(gameTime / 20) * 0.09);
+            const spawnRate = Math.max(0.25, 1.3 - Math.floor(gameTime / 30) * 0.08);
             const diffRate = difficulty === 'easy' ? 1.3 : (difficulty === 'hard' ? 0.7 : 1.0);
             const lv = (player && player.level) ? player.level : 1;
-            const lvSpawnBoost = Math.min(BALANCE.spawnRateLvBoostCap, Math.max(0, lv - 1) * 0.012);
+            const lvSpawnBoost = Math.min(0.5, Math.max(0, lv - 1) * 0.012);
             const effectiveSpawnRate = spawnRate * diffRate * (1 - lvSpawnBoost);
 
-            if (Math.random() < (dt / Math.max(0.2, effectiveSpawnRate))) {
+            if (Math.random() < (dt / Math.max(0.15, effectiveSpawnRate))) {
                 const side = Math.floor(Math.random() * 4);
                 const ex = side === 0 ? -20 : (side === 1 ? canvas.width + 20 : Math.random() * canvas.width);
                 const ey = side === 2 ? -20 : (side === 3 ? canvas.height + 20 : Math.random() * canvas.height);
@@ -1548,7 +1711,9 @@
                     damage: player.damage, fireRate: player.fireRate,
                     speed: player.speed, multishot: player.multishot,
                     drones: player.drones, blades: player.blades,
-                    magnetRadius: player.magnetRadius, bulletSize: player.bulletSize
+                    magnetRadius: player.magnetRadius, bulletSize: player.bulletSize,
+                    damageUpgradeCount: player.damageUpgradeCount || 0,
+                    fireRateUpgradeCount: player.fireRateUpgradeCount || 0
                 }
             };
             try {
@@ -1592,6 +1757,8 @@
             player = new Player();
             if (data.player) Object.assign(player, data.player);
             player.pendingLevelUps = player.pendingLevelUps || 0;
+            player.damageUpgradeCount = player.damageUpgradeCount || 0;
+            player.fireRateUpgradeCount = player.fireRateUpgradeCount || 0;
             lastBossTime = (data.lastBossTime != null) ? data.lastBossTime : (data.gameTime || 0);
             autoSaveTimer = 0;
             updateJoystickDefaults();
