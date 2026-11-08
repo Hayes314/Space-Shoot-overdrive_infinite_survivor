@@ -47,6 +47,33 @@
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
+
+        /* ===== 難度按鈕選中狀態：明顯高亮 ===== */
+        .diff-btn {
+            transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+            will-change: transform;
+        }
+        .diff-btn-active-easy {
+            border-color: #34d399 !important;
+            background: rgba(16,185,129,.32) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 2px rgba(52,211,153,.65), 0 0 22px rgba(16,185,129,.55) !important;
+            transform: scale(1.05);
+        }
+        .diff-btn-active-normal {
+            border-color: #22d3ee !important;
+            background: rgba(6,182,212,.32) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 2px rgba(34,211,238,.65), 0 0 22px rgba(6,182,212,.6) !important;
+            transform: scale(1.05);
+        }
+        .diff-btn-active-hard {
+            border-color: #fb7185 !important;
+            background: rgba(244,63,94,.32) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 2px rgba(251,113,133,.65), 0 0 22px rgba(244,63,94,.55) !important;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body class="relative w-screen h-screen overflow-hidden select-none">
@@ -77,6 +104,15 @@
                 </div>
                 <div class="relative w-full h-2.5 bg-slate-900/80 border border-cyan-500/40 rounded-full overflow-hidden p-0.5">
                     <div id="xpFill" class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-150 w-0"></div>
+                </div>
+                <!-- 裝備與屬性資訊 -->
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] font-extrabold text-slate-300 leading-tight pt-0.5">
+                    <span class="text-purple-300">🛸 <span id="droneStat">0</span></span>
+                    <span class="text-sky-300">⚔️ <span id="bladeStat">0</span></span>
+                    <span class="text-rose-300">💥 <span id="damageStat">25</span></span>
+                    <span class="text-amber-300">⚡ <span id="fireRateStat">4.0</span></span>
+                    <span class="text-emerald-300">➡️ <span id="pierceStat">0</span></span>
+                    <span class="text-cyan-300">🎯 <span id="multiStat">1</span></span>
                 </div>
             </div>
             <div class="flex items-center space-x-4">
@@ -124,7 +160,7 @@
                     <button class="diff-btn py-2 rounded-xl text-xs font-extrabold border transition border-emerald-500/40 text-emerald-400 bg-emerald-950/20" data-diff="easy">
                         <span id="diffEasyText">簡單</span>
                     </button>
-                    <button class="diff-btn py-2 rounded-xl text-xs font-extrabold border transition border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]" data-diff="normal">
+                    <button class="diff-btn py-2 rounded-xl text-xs font-extrabold border transition border-slate-700 text-slate-400 bg-slate-900/40" data-diff="normal">
                         <span id="diffNormalText">普通</span>
                     </button>
                     <button class="diff-btn py-2 rounded-xl text-xs font-extrabold border transition border-rose-500/40 text-rose-400 bg-rose-950/20" data-diff="hard">
@@ -178,11 +214,15 @@
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideUpgradesTitle" class="font-bold text-amber-300">⭐ 無限疊加升級</h3>
-                    <p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。注意：火力與射速升級的收益會隨選擇次數遞減。</p>
+                    <p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。火力與射速升級的收益會隨選擇次數遞減。子彈傷害越高，子彈體積越大。</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與平滑難度曲線</h3>
-                    <p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。30 級後出現的金色精英仍是大後期真正威脅：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英。</p>
+                    <p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。</p>
+                </div>
+                <div class="p-3 bg-slate-900/60 rounded-xl border border-amber-400/30 space-y-1">
+                    <h3 id="guideEliteTitle" class="font-bold text-amber-300">⭐ 精英敵人（大後期核心威脅）</h3>
+                    <p id="guideEliteDesc">30 級後，普通敵人有機率轉化為金色光環的精英。精英擁有 4～6 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，因此單純圍一圈光刃無法快速清掉牠們。精英死亡時會產生半徑 130 的範圍爆炸（約 30 傷害），貼身補刀會被炸傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。</p>
                 </div>
                 <div class="space-y-2">
                     <h3 id="codexEnemiesTitle" class="font-bold text-rose-400 uppercase tracking-wider text-[11px]">👾 敵方威脅圖鑑</h3>
@@ -226,7 +266,7 @@
                             <span class="text-lg">⭐</span>
                             <div>
                                 <h4 id="enemyEliteTitle" class="font-bold text-amber-300">Elite (精英敵人)</h4>
-                                <p id="enemyEliteDesc" class="text-[11px] text-slate-400">30 級後出現的金色精英：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。精英狙擊手發射金色子彈，但仍可被光刃攔截。</p>
+                                <p id="enemyEliteDesc" class="text-[11px] text-slate-400">30 級後出現的金色精英。擁有極高生命（×4～6）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 130 的範圍爆炸。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。</p>
                             </div>
                         </div>
                     </div>
@@ -378,13 +418,7 @@
         }, { passive: false });
 
         /* =========================================================
-           平衡参数：难度适中，平滑曲线
-           - 经验：衰减 4%/级，最低 3%，23 级约 16 只升级
-           - 刷怪：基础 1.4 秒，随时间降到 0.3 秒下限
-           - 血量：线性到 25 级（+6%/级），之后指数
-           - 攻击：线性到 35 级（+1.2%/级），之后指数
-           - 时间压力：+6%/分钟，上限 +120%
-           - 精英：30 级后出现，血量 ×4～6、攻击 ×2、光刃 50% 抗性
+           平衡参数
            ========================================================= */
         const BALANCE = {
             enemyHpCurve: {
@@ -423,7 +457,6 @@
 
             bladeBlockRadius: 14,
 
-            /* ===== 精英强化：大后期核心威胁 ===== */
             eliteStartLevel: 30,
             eliteChanceLow: 0.12,
             eliteChanceHigh: 0.22,
@@ -437,7 +470,6 @@
             eliteDeathExplosionRadius: 130,
             eliteXpMult: 3,
             eliteHealMult: 0.5,
-            /* ================================= */
 
             damageMultMax: 1.35,
             damageMultDecay: 0.015,
@@ -613,16 +645,18 @@
                 guideHandTitle: '🤚 左右手模式',
                 guideHandDesc: '右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。',
                 guideUpgradesTitle: '⭐ 無限疊加升級',
-                guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。注意：火力與射速升級的收益會隨選擇次數遞減。',
+                guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。火力與射速升級的收益會隨選擇次數遞減。子彈傷害越高，子彈體積越大。',
                 guideScalingTitle: '📈 爽快割草與平滑難度曲線',
-                guideScalingDesc: '經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。30 級後出現的金色精英仍是大後期真正威脅：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。後期你必須靠走位、主炮與無人機集火處理精英。',
+                guideScalingDesc: '經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。',
+                guideEliteTitle: '⭐ 精英敵人（大後期核心威脅）',
+                guideEliteDesc: '30 級後，普通敵人有機率轉化為金色光環的精英。精英擁有 4～6 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，因此單純圍一圈光刃無法快速清掉牠們。精英死亡時會產生半徑 130 的範圍爆炸（約 30 傷害），貼身補刀會被炸傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。',
                 codexEnemiesTitle: '👾 敵方威脅圖鑑',
                 enemyChaserTitle: 'Chaser (追擊者)', enemyChaserDesc: '數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',
                 enemySpeederTitle: 'Speeder (疾速突擊者)', enemySpeederDesc: '生命值較低但移動速度極快，考量玩家反應速度。',
                 enemySplitterTitle: 'Splitter (裂變體)', enemySplitterDesc: '體型較大，被擊破時會迅速分裂成兩個高速小裂變體。',
                 enemySniperTitle: 'Sniper (遠程狙擊手)', enemySniperDesc: '會與玩家保持距離，並定期發射高速能量彈幕。',
                 enemyTankTitle: 'Tank (重裝坦克)', enemyTankDesc: '擁有龐大生命值與防禦，能阻擋大量的火力發射。',
-                enemyEliteTitle: 'Elite (精英敵人)', enemyEliteDesc: '30 級後出現的金色精英：血量極厚（×4～6）、攻擊 ×2、速度快 1.3 倍，對光刃有 50% 抗性，死亡時範圍爆炸。精英狙擊手發射金色子彈，但仍可被光刃攔截。',
+                enemyEliteTitle: 'Elite (精英敵人)', enemyEliteDesc: '30 級後出現的金色精英。擁有極高生命（×4～6）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 130 的範圍爆炸。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。',
                 closeGuideBtnText: '關閉圖鑑',
                 quitModalTitle: '確定退出遊戲？', quitModalDesc: '未複製存檔碼的當前進度將會遺失。',
                 cancelQuitBtnText: '取消', confirmQuitBtnText: '確定退出',
@@ -658,16 +692,18 @@
                 guideHandTitle: '🤚 Hand Modes',
                 guideHandDesc: 'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right. This split only applies in Manual Aim mode.',
                 guideUpgradesTitle: '⭐ Stackable Upgrades',
-                guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely! Orbiting plasma blades also intercept incoming enemy bullets. Note: damage and fire-rate upgrades have diminishing returns.',
+                guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely! Orbiting plasma blades also intercept incoming enemy bullets. Damage and fire-rate upgrades have diminishing returns. Higher bullet damage means bigger bullets.',
                 guideScalingTitle: '📈 Smooth Power Curve',
-                guideScalingDesc: 'XP comes fast early (5–10 kills per level), moderate at level 23 (about 16 kills), then stabilizes around 33 kills late game — no sudden spikes. Normal enemy HP scales linearly to level 25 (+6%/level), damage linearly to level 35 (+1.2%/level), then switches to a gentle exponential. Golden Elites still appear after level 30 as the real late-game threat: massive HP (×4–6), ×2 damage, 1.3× speed, 50% blade resistance, and a death explosion. Focus-fire them with your cannon and drones.',
+                guideScalingDesc: 'XP comes fast early (5–10 kills per level), moderate at level 23 (about 16 kills), then stabilizes around 33 kills late game — no sudden spikes. Normal enemy HP scales linearly to level 25 (+6%/level), damage linearly to level 35 (+1.2%/level), then switches to a gentle exponential.',
+                guideEliteTitle: '⭐ Elite Enemies (Late-Game Threat)',
+                guideEliteDesc: 'After level 30, normal enemies have a chance to become golden elites. Elites have 4–6× HP, 2× damage, 1.3× speed, and 50% resistance to plasma blades, so a pure blade ring won\'t clear them quickly. Elites explode on death with a 130-radius blast (~30 damage) — keep your distance when finishing them. Elite snipers fire visible golden bullets, but blades can still intercept them. Focus-fire with your cannon and drones while kiting.',
                 codexEnemiesTitle: '👾 Enemy Threats Codex',
                 enemyChaserTitle: 'Chaser', enemyChaserDesc: 'Basic chasers that swarm directly towards the core.',
                 enemySpeederTitle: 'Speeder', enemySpeederDesc: 'Fast moving low-HP harassers requiring quick reflexes.',
                 enemySplitterTitle: 'Splitter', enemySplitterDesc: 'Splits into two mini splitters upon destruction.',
                 enemySniperTitle: 'Sniper', enemySniperDesc: 'Keeps distance and fires high-velocity laser rounds.',
                 enemyTankTitle: 'Tank', enemyTankDesc: 'High durability brute that tanks oncoming bullets.',
-                enemyEliteTitle: 'Elite', enemyEliteDesc: 'Golden elites appearing after level 30: enormous HP (×4–6), ×2 damage, 1.3× speed, 50% resistance to blades, and a death explosion. Elite sniper bullets are golden but can still be intercepted by blades.',
+                enemyEliteTitle: 'Elite', enemyEliteDesc: 'Golden elites appearing after level 30. Enormous HP (×4–6), ×2 damage, 1.3× speed, 50% resistance to blades, and a 130-radius death explosion. Elite sniper bullets are golden but can still be intercepted by blades. Focus-fire with cannon and drones, keep distance to avoid the blast.',
                 closeGuideBtnText: 'Close Codex',
                 quitModalTitle: 'QUIT GAME?', quitModalDesc: 'Unsaved progress will be lost.',
                 cancelQuitBtnText: 'Cancel', confirmQuitBtnText: 'Confirm Quit',
@@ -934,6 +970,36 @@
             });
         }
 
+        /* =========================================================
+           難度按鈕：明顯的選中視覺
+           ========================================================= */
+        function updateDifficultyButtons() {
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.classList.remove(
+                    'diff-btn-active-easy',
+                    'diff-btn-active-normal',
+                    'diff-btn-active-hard'
+                );
+                const val = btn.getAttribute('data-diff');
+                if (val === difficulty) {
+                    btn.classList.add('diff-btn-active-' + val);
+                }
+            });
+        }
+
+        /* =========================================================
+           輔助：取得最近的多個敵人
+           ========================================================= */
+        function getNearestEnemies(x, y, count) {
+            const arr = [];
+            for (const e of enemies) {
+                if (e.markedForDeletion) continue;
+                arr.push({ e, d: Math.hypot(e.x - x, e.y - y) });
+            }
+            arr.sort((a, b) => a.d - b.d);
+            return arr.slice(0, count).map(o => o.e);
+        }
+
         /* ---------------- PLAYER ---------------- */
         class Player {
             constructor() {
@@ -953,7 +1019,12 @@
                 this.fireRate = 4.0;
                 this.lastShotTime = 0;
                 this.lastDroneShotTime = 0;
-                this.multishot = 1;
+
+                // 多目標鎖定：自動模式同時瞄準 N 個敵人；手動模式發射 N 顆扇形子彈
+                this.multiTarget = 1;
+                // 穿透：子彈可額外穿透 N 個敵人
+                this.pierce = 0;
+
                 this.bulletSize = 5;
                 this.magnetRadius = 120;
 
@@ -965,6 +1036,12 @@
                 this.fireRateUpgradeCount = 0;
 
                 this.hitFlash = 0;
+            }
+
+            // 子彈傷害越高，子彈半徑越大（上限 14）
+            getBulletRadius() {
+                const r = 5 + Math.log2(Math.max(1, this.damage / 25)) * 2;
+                return Math.min(14, Math.max(3, r));
             }
 
             update(dt, keys) {
@@ -994,7 +1071,7 @@
 
                 if (this.hitFlash > 0) this.hitFlash -= dt * 5;
 
-                // 光刃：伤害敌人 + 拦截子弹（精英对光刃有抗性，但子弹仍可拦截）
+                // 光刃：伤害敌人 + 拦截子弹
                 if (this.blades > 0) {
                     this.bladeAngle += dt * 2.5;
                     const bladeOrbitRadius = 65;
@@ -1029,20 +1106,22 @@
                 const now = performance.now() / 1000;
 
                 if (aimMode === 'auto') {
-                    const target = getNearestEnemy(this.x, this.y);
-                    if (target && (now - this.lastShotTime >= (1 / this.fireRate))) {
-                        this.shoot(target);
+                    const hasAny = enemies.some(e => !e.markedForDeletion);
+                    if (hasAny && (now - this.lastShotTime >= (1 / this.fireRate))) {
+                        this.shootAuto();
                         this.lastShotTime = now;
                     }
+                    const target = getNearestEnemy(this.x, this.y);
                     if (this.drones > 0 && target && (now - this.lastDroneShotTime >= (1 / this.fireRate))) {
                         const droneOrbitRadius = 45;
                         const t = performance.now() / 1000;
+                        const droneRadius = Math.max(3, this.getBulletRadius() * 0.75);
                         for (let i = 0; i < this.drones; i++) {
                             const dAngle = (t * 1.5) + (i * Math.PI * 2 / this.drones);
                             const dxPos = this.x + Math.cos(dAngle) * droneOrbitRadius;
                             const dyPos = this.y + Math.sin(dAngle) * droneOrbitRadius;
                             const angle = Math.atan2(target.y - dyPos, target.x - dxPos);
-                            bullets.push(new Bullet(dxPos, dyPos, angle, this.damage * 0.6, this.bulletSize * 0.8, '#06b6d4'));
+                            bullets.push(new Bullet(dxPos, dyPos, angle, this.damage * 0.6, droneRadius, '#06b6d4', this.pierce));
                         }
                         this.lastDroneShotTime = now;
                     }
@@ -1051,7 +1130,7 @@
                         const aimMag = Math.hypot(aimJoystick.dx, aimJoystick.dy);
                         if (aimMag > 0.15 && (now - this.lastShotTime >= (1 / this.fireRate))) {
                             const angle = Math.atan2(aimJoystick.dy, aimJoystick.dx);
-                            this.shootInDirection(angle);
+                            this.shootManual(angle);
                             this.lastShotTime = now;
                         }
                     }
@@ -1059,29 +1138,40 @@
                     if (this.drones > 0 && target && (now - this.lastDroneShotTime >= (1 / this.fireRate))) {
                         const droneOrbitRadius = 45;
                         const t = performance.now() / 1000;
+                        const droneRadius = Math.max(3, this.getBulletRadius() * 0.75);
                         for (let i = 0; i < this.drones; i++) {
                             const dAngle = (t * 1.5) + (i * Math.PI * 2 / this.drones);
                             const dxPos = this.x + Math.cos(dAngle) * droneOrbitRadius;
                             const dyPos = this.y + Math.sin(dAngle) * droneOrbitRadius;
                             const angle = Math.atan2(target.y - dyPos, target.x - dxPos);
-                            bullets.push(new Bullet(dxPos, dyPos, angle, this.damage * 0.6, this.bulletSize * 0.8, '#06b6d4'));
+                            bullets.push(new Bullet(dxPos, dyPos, angle, this.damage * 0.6, droneRadius, '#06b6d4', this.pierce));
                         }
                         this.lastDroneShotTime = now;
                     }
                 }
             }
 
-            shoot(target) {
+            // 自動瞄準：同時鎖定最近 N 個敵人
+            shootAuto() {
                 playSound('shoot');
-                const baseAngle = Math.atan2(target.y - this.y, target.x - this.x);
-                this.shootInDirection(baseAngle);
+                const targets = getNearestEnemies(this.x, this.y, this.multiTarget);
+                if (targets.length === 0) return;
+                const radius = this.getBulletRadius();
+                for (let i = 0; i < this.multiTarget; i++) {
+                    const t = targets[i % targets.length];
+                    const angle = Math.atan2(t.y - this.y, t.x - this.x);
+                    bullets.push(new Bullet(this.x, this.y, angle, this.damage, radius, '#38bdf8', this.pierce));
+                }
             }
 
-            shootInDirection(baseAngle) {
-                const spread = 0.15;
-                for (let i = 0; i < this.multishot; i++) {
-                    const offset = (i - (this.multishot - 1) / 2) * spread;
-                    bullets.push(new Bullet(this.x, this.y, baseAngle + offset, this.damage, this.bulletSize, '#38bdf8'));
+            // 手動瞄準：向瞄準方向發射 N 顆扇形子彈
+            shootManual(baseAngle) {
+                playSound('shoot');
+                const radius = this.getBulletRadius();
+                const spread = Math.min(0.12, 0.8 / Math.max(1, this.multiTarget));
+                for (let i = 0; i < this.multiTarget; i++) {
+                    const offset = (i - (this.multiTarget - 1) / 2) * spread;
+                    bullets.push(new Bullet(this.x, this.y, baseAngle + offset, this.damage, radius, '#38bdf8', this.pierce));
                 }
             }
 
@@ -1170,7 +1260,7 @@
 
         /* ---------------- BULLET ---------------- */
         class Bullet {
-            constructor(x, y, angle, damage, size, color) {
+            constructor(x, y, angle, damage, size, color, pierce) {
                 this.x = x; this.y = y;
                 this.speed = 12;
                 this.vx = Math.cos(angle) * this.speed;
@@ -1178,6 +1268,8 @@
                 this.damage = damage;
                 this.radius = size;
                 this.color = color;
+                this.pierceLeft = pierce || 0;
+                this.hitEnemies = new Set();
                 this.markedForDeletion = false;
             }
             update(dt) {
@@ -1189,6 +1281,14 @@
             }
             draw() {
                 ctx.save();
+                // 穿透子弹加一圈淡白描边，方便辨识
+                if (this.pierceLeft > 0) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius + 1.5, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+                }
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
@@ -1278,7 +1378,7 @@
                         const dmg = BALANCE.sniperBulletDamage * this.damageMult;
                         const bulletColor = this.isElite ? '#fbbf24' : '#14b8a6';
                         const bulletSize = this.isElite ? 4.5 : 4;
-                        enemyBullets.push(new Bullet(this.x, this.y, angle, dmg, bulletSize, bulletColor));
+                        enemyBullets.push(new Bullet(this.x, this.y, angle, dmg, bulletSize, bulletColor, 0));
                         this.lastShotTime = now;
                     }
                 } else if (this.type === 'boss') {
@@ -1294,7 +1394,7 @@
                         const dmg = BALANCE.bossBurstDamage * this.damageMult;
                         for (let i = 0; i < burstCount; i++) {
                             const a = (i / burstCount) * Math.PI * 2 + now * 0.6;
-                            enemyBullets.push(new Bullet(this.x, this.y, a, dmg, 4, '#f43f5e'));
+                            enemyBullets.push(new Bullet(this.x, this.y, a, dmg, 4, '#f43f5e', 0));
                         }
                         this.lastShotTime = now;
                     }
@@ -1480,13 +1580,17 @@
               name: { 'zh-Hant': '等離子光刃', en: 'Plasma Blade' },
               desc: { 'zh-Hant': '+1把旋轉光刃，可傷害敵人並攔截敵方子彈（精英對光刃有 50% 抗性）', en: '+1 Orbiting Blade that damages enemies and intercepts enemy bullets (Elites have 50% blade resistance)' },
               apply: () => player.blades++ },
-            { id: 'multishot', icon: '🔱',
-              name: { 'zh-Hant': '多重發射', en: 'Multishot' },
-              desc: { 'zh-Hant': '每次射擊增加 1 顆平行子彈', en: '+1 Extra Bullet Per Shot' },
-              apply: () => player.multishot++ },
+            { id: 'multiTarget', icon: '🎯',
+              name: { 'zh-Hant': '多目標鎖定', en: 'Multi-Target Lock' },
+              desc: { 'zh-Hant': '自動瞄準時同時鎖定 +1 個敵人；手動瞄準時額外發射 1 顆扇形子彈', en: 'Auto Aim locks +1 additional enemy; Manual Aim fires +1 extra spread bullet' },
+              apply: () => player.multiTarget++ },
+            { id: 'pierce', icon: '➡️',
+              name: { 'zh-Hant': '穿透彈', en: 'Piercing Rounds' },
+              desc: { 'zh-Hant': '子彈可額外穿透 1 個敵人', en: 'Bullets pierce +1 extra enemy' },
+              apply: () => player.pierce++ },
             { id: 'damage', icon: '💥',
               name: { 'zh-Hant': '火力強化', en: 'Damage Boost' },
-              desc: { 'zh-Hant': '增加基礎砲擊傷害（選擇次數越多，收益越低，最低 ×1.20）', en: 'Increase bullet damage (diminishing returns, minimum ×1.20)' },
+              desc: { 'zh-Hant': '增加基礎砲擊傷害（選擇次數越多，收益越低，最低 ×1.20；傷害越高子彈越大）', en: 'Increase bullet damage (diminishing returns, minimum ×1.20; bigger damage = bigger bullet)' },
               apply: () => {
                   const count = player.damageUpgradeCount || 0;
                   const mult = Math.max(BALANCE.damageMultFloor, BALANCE.damageMultMax - count * BALANCE.damageMultDecay);
@@ -1711,7 +1815,9 @@
                     level: player.level, xp: player.xp, nextXp: player.nextXp,
                     pendingLevelUps: player.pendingLevelUps,
                     damage: player.damage, fireRate: player.fireRate,
-                    speed: player.speed, multishot: player.multishot,
+                    speed: player.speed,
+                    multiTarget: player.multiTarget,
+                    pierce: player.pierce,
                     drones: player.drones, blades: player.blades,
                     magnetRadius: player.magnetRadius, bulletSize: player.bulletSize,
                     damageUpgradeCount: player.damageUpgradeCount || 0,
@@ -1749,6 +1855,7 @@
             aimMode = data.aimMode || 'auto';
             handMode = data.handMode || 'right';
             updateOptionButtons();
+            updateDifficultyButtons();
 
             bullets = [];
             enemyBullets = [];
@@ -1757,7 +1864,17 @@
             gems = [];
 
             player = new Player();
-            if (data.player) Object.assign(player, data.player);
+            if (data.player) {
+                // 兼容舊存檔：舊版使用 multishot 欄位
+                const p = data.player;
+                if (p.multiTarget == null && p.multishot != null) {
+                    p.multiTarget = p.multishot;
+                }
+                if (p.pierce == null) p.pierce = 0;
+                Object.assign(player, p);
+            }
+            if (!player.multiTarget || player.multiTarget < 1) player.multiTarget = 1;
+            if (!player.pierce || player.pierce < 0) player.pierce = 0;
             player.pendingLevelUps = player.pendingLevelUps || 0;
             player.damageUpgradeCount = player.damageUpgradeCount || 0;
             player.fireRateUpgradeCount = player.fireRateUpgradeCount || 0;
@@ -1776,6 +1893,14 @@
             document.getElementById('levelText').innerText = player.level;
             document.getElementById('scoreText').innerText = score;
             document.getElementById('bestScoreText').innerText = highScore;
+
+            // 裝備與屬性
+            document.getElementById('droneStat').innerText = player.drones;
+            document.getElementById('bladeStat').innerText = player.blades;
+            document.getElementById('damageStat').innerText = Math.round(player.damage);
+            document.getElementById('fireRateStat').innerText = player.fireRate.toFixed(1);
+            document.getElementById('pierceStat').innerText = player.pierce;
+            document.getElementById('multiStat').innerText = player.multiTarget;
         }
 
         /* ---------------- GAME LOOP ---------------- */
@@ -1804,15 +1929,23 @@
                 for (const p of particles) p.update(dt);
                 for (const g of gems) g.update(dt);
 
+                // 玩家子彈 vs 敵人（含穿透邏輯）
                 for (const bullet of bullets) {
                     if (bullet.markedForDeletion) continue;
                     for (const enemy of enemies) {
                         if (enemy.markedForDeletion) continue;
+                        if (bullet.hitEnemies.has(enemy)) continue;
                         const dist = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
                         if (dist < enemy.radius + bullet.radius) {
-                            bullet.markedForDeletion = true;
+                            bullet.hitEnemies.add(enemy);
                             enemy.takeDamage(bullet.damage);
-                            break;
+                            if (bullet.pierceLeft > 0) {
+                                bullet.pierceLeft--;
+                                // 穿透后继续飞行，不删除
+                            } else {
+                                bullet.markedForDeletion = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -1963,6 +2096,7 @@
             startOverlay.classList.remove('hidden');
             hud.classList.add('hidden');
             bossBanner.classList.add('hidden');
+            updateDifficultyButtons();
             checkAutoSave();
         }
 
@@ -2071,12 +2205,8 @@
 
         document.querySelectorAll('.diff-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.diff-btn').forEach(b => {
-                    b.classList.remove('border-cyan-500', 'bg-cyan-500/20', 'text-cyan-300', 'shadow-[0_0_12px_rgba(6,182,212,0.3)]');
-                });
-                const target = e.currentTarget;
-                target.classList.add('border-cyan-500', 'bg-cyan-500/20', 'text-cyan-300', 'shadow-[0_0_12px_rgba(6,182,212,0.3)]');
-                difficulty = target.getAttribute('data-diff');
+                difficulty = e.currentTarget.getAttribute('data-diff');
+                updateDifficultyButtons();
             });
         });
 
@@ -2100,6 +2230,7 @@
         window.onload = () => {
             applyLanguage();
             updateOptionButtons();
+            updateDifficultyButtons();
             updateJoystickDefaults();
             checkAutoSave();
             requestAnimationFrame(gameLoop);
