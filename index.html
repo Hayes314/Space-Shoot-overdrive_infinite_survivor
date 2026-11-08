@@ -48,7 +48,7 @@
             overscroll-behavior: contain;
         }
 
-        /* ===== 難度按鈕選中狀態：明顯高亮 ===== */
+        /* ===== 難度按鈕選中狀態 ===== */
         .diff-btn {
             transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
             will-change: transform;
@@ -218,11 +218,11 @@
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1">
                     <h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與平滑難度曲線</h3>
-                    <p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。</p>
+                    <p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%）。60 級後敵人成長顯著加速，時間壓力最高可疊加 +200%，你必須持續走位、集火精英、謹慎使用技能。</p>
                 </div>
                 <div class="p-3 bg-slate-900/60 rounded-xl border border-amber-400/30 space-y-1">
                     <h3 id="guideEliteTitle" class="font-bold text-amber-300">⭐ 精英敵人（大後期核心威脅）</h3>
-                    <p id="guideEliteDesc">30 級後，普通敵人有機率轉化為金色光環的精英。精英擁有 4～6 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，因此單純圍一圈光刃無法快速清掉牠們。精英死亡時會產生半徑 130 的範圍爆炸（約 30 傷害），貼身補刀會被炸傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。</p>
+                    <p id="guideEliteDesc">30 級後普通敵人有機率轉化為金色精英。精英擁有 5～7 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，單純圍一圈光刃無法快速清掉牠們。60 級後精英進入「狂暴狀態」：額外 +25% 血量、+15% 速度，外圈會發出紅金色脈衝光環。精英死亡時會產生半徑 140 的範圍爆炸（約 40 傷害），貼身補刀會被重傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。</p>
                 </div>
                 <div class="space-y-2">
                     <h3 id="codexEnemiesTitle" class="font-bold text-rose-400 uppercase tracking-wider text-[11px]">👾 敵方威脅圖鑑</h3>
@@ -266,7 +266,7 @@
                             <span class="text-lg">⭐</span>
                             <div>
                                 <h4 id="enemyEliteTitle" class="font-bold text-amber-300">Elite (精英敵人)</h4>
-                                <p id="enemyEliteDesc" class="text-[11px] text-slate-400">30 級後出現的金色精英。擁有極高生命（×4～6）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 130 的範圍爆炸。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。</p>
+                                <p id="enemyEliteDesc" class="text-[11px] text-slate-400">30 級後出現的金色精英。擁有極高生命（×5～7）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 140 的範圍爆炸（約 40 傷害）。60 級後精英進入狂暴狀態，額外 +25% 血量、+15% 速度，外圈發出紅金色脈衝。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。</p>
                             </div>
                         </div>
                     </div>
@@ -418,26 +418,31 @@
         }, { passive: false });
 
         /* =========================================================
-           平衡参数
+           平衡参数：大后期压力加强
+           - 25/35 级后血量/攻击指数更陡
+           - 时间压力上限 +200%
+           - 精英更频繁、更厚、60 级后狂暴
+           - 精英死亡爆炸更大
            ========================================================= */
         const BALANCE = {
             enemyHpCurve: {
                 linearPhaseMaxLevel: 25,
                 linearPerLevel: 0.06,
-                expBase: 1.06,
-                expMultiplier: 0.55
+                expBase: 1.075,
+                expMultiplier: 0.62
             },
             enemyDmgCurve: {
                 linearPhaseMaxLevel: 35,
                 linearPerLevel: 0.012,
-                expBase: 1.02,
-                expMultiplier: 0.5
+                expBase: 1.028,
+                expMultiplier: 0.55
             },
             enemySpeedPerLevel: 0.01,
             enemySpeedCap: 1.35,
 
-            timePressurePerMinute: 0.06,
-            timePressureCap: 1.2,
+            // 时间压力：每 60 秒 +7%，上限 +200%
+            timePressurePerMinute: 0.07,
+            timePressureCap: 2.0,
 
             hpPerKill: 0.8,
             hpPerBossKill: 30,
@@ -453,23 +458,30 @@
             bossBurstDamage: 6,
             bossBurstInterval: 2.8,
             bossBurstCount: 10,
-            bossHpBonusPerLevel: 0.08,
+            bossHpBonusPerLevel: 0.10,
 
             bladeBlockRadius: 14,
 
+            /* ===== 精英强化 ===== */
             eliteStartLevel: 30,
-            eliteChanceLow: 0.12,
-            eliteChanceHigh: 0.22,
-            eliteHpMultLow: 4,
-            eliteHpMultHigh: 6,
+            eliteChanceLow: 0.15,
+            eliteChanceHigh: 0.28,
+            eliteHpMultLow: 5,
+            eliteHpMultHigh: 7,
             eliteDmgMult: 2.0,
             eliteRadiusMult: 1.5,
             eliteSpeedBonus: 1.3,
             eliteBladeResist: 0.5,
-            eliteDeathExplosionDamage: 30,
-            eliteDeathExplosionRadius: 130,
+            eliteDeathExplosionDamage: 40,
+            eliteDeathExplosionRadius: 140,
             eliteXpMult: 3,
-            eliteHealMult: 0.5,
+            eliteHealMult: 0.4,
+
+            // 60 级后精英狂暴
+            eliteBerserkLevel: 60,
+            eliteBerserkHpBonus: 0.25,
+            eliteBerserkSpeedBonus: 0.15,
+            /* ================================= */
 
             damageMultMax: 1.35,
             damageMultDecay: 0.015,
@@ -646,17 +658,17 @@
                 guideHandDesc: '右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。',
                 guideUpgradesTitle: '⭐ 無限疊加升級',
                 guideUpgradesDesc: '擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。火力與射速升級的收益會隨選擇次數遞減。子彈傷害越高，子彈體積越大。',
-                guideScalingTitle: '📈 爽快割草與平滑難度曲線',
-                guideScalingDesc: '經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻，沒有突然的升級斷層。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%），之後才轉為溫和指數，避免中期壓力陡增。',
+                guideScalingTitle: '📈 爽快割草與大後期壓力',
+                guideScalingDesc: '經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%）。60 級後敵人成長顯著加速，時間壓力最高可疊加 +200%，你必須持續走位、集火精英、謹慎使用技能。',
                 guideEliteTitle: '⭐ 精英敵人（大後期核心威脅）',
-                guideEliteDesc: '30 級後，普通敵人有機率轉化為金色光環的精英。精英擁有 4～6 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，因此單純圍一圈光刃無法快速清掉牠們。精英死亡時會產生半徑 130 的範圍爆炸（約 30 傷害），貼身補刀會被炸傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。',
+                guideEliteDesc: '30 級後普通敵人有機率轉化為金色精英。精英擁有 5～7 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，單純圍一圈光刃無法快速清掉牠們。60 級後精英進入「狂暴狀態」：額外 +25% 血量、+15% 速度，外圈會發出紅金色脈衝光環。精英死亡時會產生半徑 140 的範圍爆炸（約 40 傷害），貼身補刀會被重傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。',
                 codexEnemiesTitle: '👾 敵方威脅圖鑑',
                 enemyChaserTitle: 'Chaser (追擊者)', enemyChaserDesc: '數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',
                 enemySpeederTitle: 'Speeder (疾速突擊者)', enemySpeederDesc: '生命值較低但移動速度極快，考量玩家反應速度。',
                 enemySplitterTitle: 'Splitter (裂變體)', enemySplitterDesc: '體型較大，被擊破時會迅速分裂成兩個高速小裂變體。',
                 enemySniperTitle: 'Sniper (遠程狙擊手)', enemySniperDesc: '會與玩家保持距離，並定期發射高速能量彈幕。',
                 enemyTankTitle: 'Tank (重裝坦克)', enemyTankDesc: '擁有龐大生命值與防禦，能阻擋大量的火力發射。',
-                enemyEliteTitle: 'Elite (精英敵人)', enemyEliteDesc: '30 級後出現的金色精英。擁有極高生命（×4～6）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 130 的範圍爆炸。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。',
+                enemyEliteTitle: 'Elite (精英敵人)', enemyEliteDesc: '30 級後出現的金色精英。擁有極高生命（×5～7）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 140 的範圍爆炸（約 40 傷害）。60 級後精英進入狂暴狀態，額外 +25% 血量、+15% 速度，外圈發出紅金色脈衝。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。',
                 closeGuideBtnText: '關閉圖鑑',
                 quitModalTitle: '確定退出遊戲？', quitModalDesc: '未複製存檔碼的當前進度將會遺失。',
                 cancelQuitBtnText: '取消', confirmQuitBtnText: '確定退出',
@@ -693,17 +705,17 @@
                 guideHandDesc: 'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right. This split only applies in Manual Aim mode.',
                 guideUpgradesTitle: '⭐ Stackable Upgrades',
                 guideUpgradesDesc: 'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely! Orbiting plasma blades also intercept incoming enemy bullets. Damage and fire-rate upgrades have diminishing returns. Higher bullet damage means bigger bullets.',
-                guideScalingTitle: '📈 Smooth Power Curve',
-                guideScalingDesc: 'XP comes fast early (5–10 kills per level), moderate at level 23 (about 16 kills), then stabilizes around 33 kills late game — no sudden spikes. Normal enemy HP scales linearly to level 25 (+6%/level), damage linearly to level 35 (+1.2%/level), then switches to a gentle exponential.',
+                guideScalingTitle: '📈 Power Fantasy & Late-Game Pressure',
+                guideScalingDesc: 'XP comes fast early (5–10 kills per level), moderate at level 23 (about 16 kills), then stabilizes around 33 kills late game. Normal enemy HP scales linearly to level 25 (+6%/level), damage linearly to level 35 (+1.2%/level). After level 60 enemy scaling accelerates sharply, and time pressure stacks up to +200%. You must keep moving, focus-fire elites, and play carefully.',
                 guideEliteTitle: '⭐ Elite Enemies (Late-Game Threat)',
-                guideEliteDesc: 'After level 30, normal enemies have a chance to become golden elites. Elites have 4–6× HP, 2× damage, 1.3× speed, and 50% resistance to plasma blades, so a pure blade ring won\'t clear them quickly. Elites explode on death with a 130-radius blast (~30 damage) — keep your distance when finishing them. Elite snipers fire visible golden bullets, but blades can still intercept them. Focus-fire with your cannon and drones while kiting.',
+                guideEliteDesc: 'After level 30, normal enemies have a chance to become golden elites. Elites have 5–7× HP, 2× damage, 1.3× speed, and 50% resistance to plasma blades, so a pure blade ring won\'t clear them quickly. After level 60, elites go berserk: +25% HP and +15% speed, with a red-gold pulsing aura. Elites explode on death with a 140-radius blast (~40 damage) — keep your distance when finishing them. Elite snipers fire visible golden bullets, but blades can still intercept them. Focus-fire with your cannon and drones while kiting.',
                 codexEnemiesTitle: '👾 Enemy Threats Codex',
                 enemyChaserTitle: 'Chaser', enemyChaserDesc: 'Basic chasers that swarm directly towards the core.',
                 enemySpeederTitle: 'Speeder', enemySpeederDesc: 'Fast moving low-HP harassers requiring quick reflexes.',
                 enemySplitterTitle: 'Splitter', enemySplitterDesc: 'Splits into two mini splitters upon destruction.',
                 enemySniperTitle: 'Sniper', enemySniperDesc: 'Keeps distance and fires high-velocity laser rounds.',
                 enemyTankTitle: 'Tank', enemyTankDesc: 'High durability brute that tanks oncoming bullets.',
-                enemyEliteTitle: 'Elite', enemyEliteDesc: 'Golden elites appearing after level 30. Enormous HP (×4–6), ×2 damage, 1.3× speed, 50% resistance to blades, and a 130-radius death explosion. Elite sniper bullets are golden but can still be intercepted by blades. Focus-fire with cannon and drones, keep distance to avoid the blast.',
+                enemyEliteTitle: 'Elite', enemyEliteDesc: 'Golden elites appearing after level 30. Enormous HP (×5–7), ×2 damage, 1.3× speed, 50% resistance to blades, and a 140-radius death explosion (~40 damage). After level 60 they go berserk (+25% HP, +15% speed, red-gold pulsing aura). Elite sniper bullets are golden but can still be intercepted by blades. Focus-fire with cannon and drones, keep distance to avoid the blast.',
                 closeGuideBtnText: 'Close Codex',
                 quitModalTitle: 'QUIT GAME?', quitModalDesc: 'Unsaved progress will be lost.',
                 cancelQuitBtnText: 'Cancel', confirmQuitBtnText: 'Confirm Quit',
@@ -970,9 +982,6 @@
             });
         }
 
-        /* =========================================================
-           難度按鈕：明顯的選中視覺
-           ========================================================= */
         function updateDifficultyButtons() {
             document.querySelectorAll('.diff-btn').forEach(btn => {
                 btn.classList.remove(
@@ -987,9 +996,6 @@
             });
         }
 
-        /* =========================================================
-           輔助：取得最近的多個敵人
-           ========================================================= */
         function getNearestEnemies(x, y, count) {
             const arr = [];
             for (const e of enemies) {
@@ -1020,9 +1026,7 @@
                 this.lastShotTime = 0;
                 this.lastDroneShotTime = 0;
 
-                // 多目標鎖定：自動模式同時瞄準 N 個敵人；手動模式發射 N 顆扇形子彈
                 this.multiTarget = 1;
-                // 穿透：子彈可額外穿透 N 個敵人
                 this.pierce = 0;
 
                 this.bulletSize = 5;
@@ -1038,7 +1042,6 @@
                 this.hitFlash = 0;
             }
 
-            // 子彈傷害越高，子彈半徑越大（上限 14）
             getBulletRadius() {
                 const r = 5 + Math.log2(Math.max(1, this.damage / 25)) * 2;
                 return Math.min(14, Math.max(3, r));
@@ -1151,7 +1154,6 @@
                 }
             }
 
-            // 自動瞄準：同時鎖定最近 N 個敵人
             shootAuto() {
                 playSound('shoot');
                 const targets = getNearestEnemies(this.x, this.y, this.multiTarget);
@@ -1164,7 +1166,6 @@
                 }
             }
 
-            // 手動瞄準：向瞄準方向發射 N 顆扇形子彈
             shootManual(baseAngle) {
                 playSound('shoot');
                 const radius = this.getBulletRadius();
@@ -1281,7 +1282,6 @@
             }
             draw() {
                 ctx.save();
-                // 穿透子弹加一圈淡白描边，方便辨识
                 if (this.pierceLeft > 0) {
                     ctx.beginPath();
                     ctx.arc(this.x, this.y, this.radius + 1.5, 0, Math.PI * 2);
@@ -1307,6 +1307,7 @@
                 this.markedForDeletion = false;
                 this.lastShotTime = 0;
                 this.isElite = false;
+                this.isBerserk = false;
 
                 if (type === 'chaser') { this.radius = 12; this.speed = 2.4; this.maxHp = 30; this.color = '#ef4444'; this.xpValue = 2; }
                 else if (type === 'speeder') { this.radius = 9; this.speed = 4.5; this.maxHp = 18; this.color = '#f97316'; this.xpValue = 3; }
@@ -1354,6 +1355,13 @@
                         this.speed *= BALANCE.eliteSpeedBonus;
                         this.color = '#fbbf24';
                         this.xpValue *= 3;
+
+                        // 60 级后狂暴精英
+                        if (lv >= BALANCE.eliteBerserkLevel) {
+                            this.isBerserk = true;
+                            this.maxHp = Math.floor(this.maxHp * (1 + BALANCE.eliteBerserkHpBonus));
+                            this.speed *= (1 + BALANCE.eliteBerserkSpeedBonus);
+                        }
                     }
                 }
 
@@ -1415,7 +1423,7 @@
                     totalKills++;
 
                     if (this.isElite) {
-                        createParticles(this.x, this.y, '#fbbf24', 30);
+                        createParticles(this.x, this.y, '#fbbf24', this.isBerserk ? 40 : 30);
                         if (player && Math.hypot(player.x - this.x, player.y - this.y) < BALANCE.eliteDeathExplosionRadius) {
                             player.hp -= BALANCE.eliteDeathExplosionDamage;
                             player.hitFlash = 1.0;
@@ -1469,17 +1477,32 @@
                 ctx.translate(this.x, this.y);
 
                 if (this.isElite) {
-                    ctx.beginPath();
-                    ctx.arc(0, 0, this.radius + 6 + Math.sin(performance.now() / 200) * 2, 0, Math.PI * 2);
-                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.75)';
-                    ctx.lineWidth = 2.5;
-                    ctx.stroke();
+                    // 狂暴精英：紅金色脈衝光環
+                    const pulse = Math.sin(performance.now() / 150) * 3;
+                    if (this.isBerserk) {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.radius + 10 + pulse, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'rgba(251, 113, 133, 0.85)';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.radius + 6 + Math.sin(performance.now() / 200) * 2, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+                        ctx.lineWidth = 2.5;
+                        ctx.stroke();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.radius + 6 + Math.sin(performance.now() / 200) * 2, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'rgba(251, 191, 36, 0.75)';
+                        ctx.lineWidth = 2.5;
+                        ctx.stroke();
+                    }
                 }
 
                 ctx.beginPath();
                 ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.shadowColor = this.color;
+                ctx.fillStyle = this.isBerserk ? '#f43f5e' : this.color;
+                ctx.shadowColor = this.isBerserk ? '#fb7185' : this.color;
                 ctx.shadowBlur = this.isElite ? 24 : 10;
                 ctx.fill();
 
@@ -1488,7 +1511,7 @@
                     const hpPercent = Math.max(0, this.hp / this.maxHp);
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
                     ctx.fillRect(-this.radius, -this.radius - 8, barWidth, 4);
-                    ctx.fillStyle = this.isElite ? '#fbbf24' : '#ef4444';
+                    ctx.fillStyle = this.isBerserk ? '#fb7185' : (this.isElite ? '#fbbf24' : '#ef4444');
                     ctx.fillRect(-this.radius, -this.radius - 8, barWidth * hpPercent, 4);
                 }
                 ctx.restore();
@@ -1865,7 +1888,6 @@
 
             player = new Player();
             if (data.player) {
-                // 兼容舊存檔：舊版使用 multishot 欄位
                 const p = data.player;
                 if (p.multiTarget == null && p.multishot != null) {
                     p.multiTarget = p.multishot;
@@ -1894,7 +1916,6 @@
             document.getElementById('scoreText').innerText = score;
             document.getElementById('bestScoreText').innerText = highScore;
 
-            // 裝備與屬性
             document.getElementById('droneStat').innerText = player.drones;
             document.getElementById('bladeStat').innerText = player.blades;
             document.getElementById('damageStat').innerText = Math.round(player.damage);
@@ -1929,7 +1950,7 @@
                 for (const p of particles) p.update(dt);
                 for (const g of gems) g.update(dt);
 
-                // 玩家子彈 vs 敵人（含穿透邏輯）
+                // 玩家子彈 vs 敵人（含穿透）
                 for (const bullet of bullets) {
                     if (bullet.markedForDeletion) continue;
                     for (const enemy of enemies) {
@@ -1941,7 +1962,6 @@
                             enemy.takeDamage(bullet.damage);
                             if (bullet.pierceLeft > 0) {
                                 bullet.pierceLeft--;
-                                // 穿透后继续飞行，不删除
                             } else {
                                 bullet.markedForDeletion = true;
                                 break;
