@@ -1,2353 +1,447 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0d0b08">
-<title>暗巷 · 三部曲</title>
+<title>Neon Overdrive: Infinite Survivor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-  html,body{
-    width:100%;height:100%;overflow:hidden;position:fixed;
-    background:#0d0b08;
-    touch-action:none;overscroll-behavior:none;
-    -webkit-touch-callout:none;
-  }
-  canvas{display:block;touch-action:none}
+*{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
+html,body{overscroll-behavior:none;overflow:hidden;position:fixed;inset:0}
+body{font-family:'Inter',sans-serif;background:#030712;color:#f3f4f6}
+canvas{display:block;width:100vw;height:100vh;touch-action:none;-webkit-user-drag:none}
+.neon-text-cyan{text-shadow:0 0 10px rgba(6,182,212,.7),0 0 20px rgba(6,182,212,.4)}
+.neon-text-pink{text-shadow:0 0 10px rgba(236,72,153,.7),0 0 20px rgba(236,72,153,.4)}
+.neon-card{background:rgba(15,23,42,.85);backdrop-filter:blur(12px);border:1px solid rgba(56,189,248,.25);box-shadow:0 8px 32px 0 rgba(0,0,0,.5)}
+.upgrade-card{transition:all .2s cubic-bezier(.4,0,.2,1)}
+.upgrade-card:hover{transform:translateY(-4px) scale(1.02);border-color:rgba(6,182,212,.8);box-shadow:0 0 20px rgba(6,182,212,.4)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:rgba(15,23,42,.6)}
+::-webkit-scrollbar-thumb{background:rgba(56,189,248,.4);border-radius:4px}
+.overflow-y-auto,textarea,#saveCodeInput{touch-action:pan-y!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.diff-btn{transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease,border-color .18s ease,color .18s ease;will-change:transform}
+.diff-btn-active-easy{border-color:#34d399!important;background:rgba(16,185,129,.32)!important;color:#fff!important;box-shadow:0 0 0 2px rgba(52,211,153,.65),0 0 22px rgba(16,185,129,.55)!important;transform:scale(1.05)}
+.diff-btn-active-normal{border-color:#22d3ee!important;background:rgba(6,182,212,.32)!important;color:#fff!important;box-shadow:0 0 0 2px rgba(34,211,238,.65),0 0 22px rgba(6,182,212,.6)!important;transform:scale(1.05)}
+.diff-btn-active-hard{border-color:#fb7185!important;background:rgba(244,63,94,.32)!important;color:#fff!important;box-shadow:0 0 0 2px rgba(251,113,133,.65),0 0 22px rgba(244,63,94,.55)!important;transform:scale(1.05)}
 </style>
 </head>
-<body>
-<canvas id="game"></canvas>
+<body class="relative w-screen h-screen overflow-hidden select-none">
+<canvas id="gameCanvas" draggable="false"></canvas>
+
+<div id="topBar" class="absolute top-4 right-4 z-20 flex items-center space-x-2">
+<button id="langToggleBtn" class="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-bold text-cyan-400 transition cursor-pointer backdrop-blur-md">🌐 <span id="langText">EN</span></button>
+<button id="quickSaveBtn" class="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-bold text-amber-400 transition cursor-pointer backdrop-blur-md">💾 <span id="saveBtnText">存檔碼</span></button>
+<button id="pauseBtn" class="px-3 py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-bold text-cyan-400 transition cursor-pointer backdrop-blur-md">⏸️ <span id="pauseBtnText">暫停</span></button>
+<button id="quickQuitBtn" class="px-3 py-1.5 bg-slate-900/80 hover:bg-rose-950 border border-rose-800/60 rounded-xl text-xs font-bold text-rose-400 transition cursor-pointer backdrop-blur-md">🚪 <span id="quitBtnText">退出</span></button>
+</div>
+
+<div id="hud" class="absolute inset-x-0 top-14 px-4 pointer-events-none z-10 flex flex-col space-y-2 hidden">
+<div class="flex justify-between items-center max-w-4xl mx-auto w-full">
+<div class="flex flex-col space-y-1.5 w-48 sm:w-64">
+<div class="relative w-full h-4 bg-slate-900/80 border border-emerald-500/40 rounded-full overflow-hidden p-0.5">
+<div id="hpFill" class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-150 w-full"></div>
+<div id="hpText" class="absolute inset-0 flex items-center justify-center text-[10px] font-extrabold text-white tracking-widest drop-shadow">100 / 100</div>
+</div>
+<div class="relative w-full h-2.5 bg-slate-900/80 border border-cyan-500/40 rounded-full overflow-hidden p-0.5">
+<div id="xpFill" class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-150 w-0"></div>
+</div>
+<div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] font-extrabold text-slate-300 leading-tight pt-0.5">
+<span class="text-purple-300">🛸 <span id="droneStat">0</span></span>
+<span class="text-sky-300">⚔️ <span id="bladeStat">0</span></span>
+<span class="text-rose-300">💥 <span id="damageStat">25</span></span>
+<span class="text-amber-300">⚡ <span id="fireRateStat">4.0</span></span>
+<span class="text-emerald-300">➡️ <span id="pierceStat">0</span></span>
+<span class="text-cyan-300">🎯 <span id="multiStat">1</span></span>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<div class="text-right">
+<div class="text-[10px] text-slate-400 font-extrabold tracking-wider uppercase" id="labelScore">SCORE</div>
+<div id="scoreText" class="text-xl sm:text-2xl font-black text-white tracking-tight neon-text-cyan">0</div>
+</div>
+<div class="w-12 h-12 rounded-xl bg-slate-900/90 border border-cyan-500/50 flex flex-col items-center justify-center shadow-lg">
+<span class="text-[9px] text-cyan-400 font-extrabold">LV</span>
+<span id="levelText" class="text-lg font-black text-white leading-none">1</span>
+</div>
+</div>
+</div>
+<div id="autoSaveBadge" class="self-center bg-slate-900/80 border border-amber-500/40 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-amber-400 opacity-0 transition-opacity duration-300">💾 <span id="autoSaveText">自動儲存中...</span></div>
+</div>
+
+<div id="bossBanner" class="absolute top-1/4 inset-x-0 z-20 flex flex-col items-center justify-center pointer-events-none hidden">
+<div class="bg-rose-950/80 border-y-2 border-rose-500 w-full py-2 text-center backdrop-blur-md animate-pulse">
+<h2 id="bossText" class="text-2xl sm:text-3xl font-black text-rose-500 tracking-widest neon-text-pink">⚠️ WARNING: DREADNOUGHT BOSS SPAWNED ⚠️</h2>
+</div>
+</div>
+
+<div id="startOverlay" class="absolute inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+<div class="neon-card p-6 sm:p-8 rounded-3xl max-w-lg w-full text-center space-y-6 border border-cyan-500/30">
+<div>
+<h1 class="text-3xl sm:text-5xl font-black italic tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-pink-500 drop-shadow">NEON OVERDRIVE</h1>
+<p id="subTitle" class="text-xs sm:text-sm font-semibold text-slate-400 mt-1 uppercase tracking-widest">Infinite Roguelike Survivor</p>
+</div>
+<div class="flex justify-center">
+<button id="startLangBtn" class="px-5 py-1.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/60 rounded-xl text-xs font-bold text-cyan-400 transition cursor-pointer backdrop-blur-md">🌐 <span id="startLangText">EN</span></button>
+</div>
+<div class="space-y-2">
+<label id="labelDifficulty" class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Select Difficulty</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="diff-btn py-2 rounded-xl text-xs font-extrabold border transition border-emerald-500/40 text-emerald-400 bg-emerald-950/20" data-diff="easy"><span id="diffEasyText">簡單</span></button>
+<button class="diff-btn py-2 rounded-xl text-xs font-extrabold border transition border-slate-700 text-slate-400 bg-slate-900/40" data-diff="normal"><span id="diffNormalText">普通</span></button>
+<button class="diff-btn py-2 rounded-xl text-xs font-extrabold border transition border-rose-500/40 text-rose-400 bg-rose-950/20" data-diff="hard"><span id="diffHardText">超頻狂暴</span></button>
+</div>
+</div>
+<div class="space-y-3 pt-2">
+<button id="continueBtn" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg transition cursor-pointer hidden uppercase tracking-wider">▶️ <span id="continueBtnText">繼續遊戲 (Auto-Save)</span></button>
+<button id="startButton" class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-base rounded-2xl shadow-[0_0_25px_rgba(6,182,212,0.5)] transition transform active:scale-95 cursor-pointer uppercase tracking-wider">⚡ <span id="startBtnText">開始遊戲</span></button>
+<div class="grid grid-cols-2 gap-3">
+<button id="howToPlayBtn" class="py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer">📖 <span id="howToPlayBtnText">玩法與敵方檔案</span></button>
+<button id="loadSaveBtn" class="py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-400 font-bold text-xs rounded-xl transition cursor-pointer">📥 <span id="loadBtnText">貼上存檔碼</span></button>
+</div>
+<button id="settingsBtn" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer">⚙️ <span id="settingsBtnText">設定</span></button>
+</div>
+<div class="text-[11px] text-slate-500 pt-2 border-t border-slate-800/80 flex justify-between items-center">
+<span>Highest Score: <strong id="bestScoreText" class="text-cyan-400">0</strong></span>
+<span>WASD / Tap to Move</span>
+</div>
+</div>
+</div>
+
+<div id="howToPlayModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+<div class="neon-card p-6 rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col border border-cyan-500/30">
+<h2 id="codexTitle" class="text-xl font-black text-cyan-400 text-center mb-4 shrink-0">玩法指南與敵方檔案</h2>
+<div class="overflow-y-auto space-y-4 pr-1 text-xs leading-relaxed text-slate-300 flex-1 min-h-0">
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1"><h3 id="guideControlsTitle" class="font-bold text-cyan-300">🎮 操作說明</h3><p id="guideControlsDesc">電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：自動瞄準模式下，按下畫面任意位置即可召喚移動搖桿；手動瞄準模式下，移動搖桿與瞄準搖桿分別位於左右半屏（依左右手模式而定）。搖桿平常位於角落，按下時會傳送到按點，放開後回歸角落。核心會自動瞄準最近的敵人發射雷射炮。</p></div>
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1"><h3 id="guideAimTitle" class="font-bold text-pink-300">🎯 瞄準模式</h3><p id="guideAimDesc">自動瞄準：主炮會自動鎖定最近的敵人，移動搖桿可在畫面任意位置召喚。手動瞄準：畫面另一側會出現瞄準搖桿，拖動瞄準搖桿決定射擊方向，放開即停止射擊。</p></div>
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1"><h3 id="guideHandTitle" class="font-bold text-emerald-300">🤚 左右手模式</h3><p id="guideHandDesc">右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。</p></div>
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1"><h3 id="guideUpgradesTitle" class="font-bold text-amber-300">⭐ 無限疊加升級</h3><p id="guideUpgradesDesc">擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。火力與射速升級的收益會隨選擇次數遞減。子彈傷害越高，子彈體積越大。</p></div>
+<div class="p-3 bg-slate-900/60 rounded-xl border border-slate-800 space-y-1"><h3 id="guideScalingTitle" class="font-bold text-rose-300">📈 爽快割草與大後期壓力</h3><p id="guideScalingDesc">經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%）。60 級後敵人成長顯著加速，時間壓力最高可疊加 +200%，你必須持續走位、集火精英、謹慎使用技能。</p></div>
+<div class="p-3 bg-slate-900/60 rounded-xl border border-amber-400/30 space-y-1"><h3 id="guideEliteTitle" class="font-bold text-amber-300">⭐ 精英敵人（大後期核心威脅）</h3><p id="guideEliteDesc">30 級後普通敵人有機率轉化為金色精英。精英擁有 5～7 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，單純圍一圈光刃無法快速清掉牠們。60 級後精英進入「狂暴狀態」：額外 +25% 血量、+15% 速度，外圈會發出紅金色脈衝光環。精英死亡時會產生半徑 140 的範圍爆炸（約 40 傷害），貼身補刀會被重傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。</p></div>
+<div class="space-y-2"><h3 id="codexEnemiesTitle" class="font-bold text-rose-400 uppercase tracking-wider text-[11px]">👾 敵方威脅圖鑑</h3>
+<div class="grid grid-cols-1 gap-2">
+<div class="p-2.5 bg-slate-900/40 rounded-lg border border-red-500/20 flex items-start space-x-3"><span class="text-lg">🔴</span><div><h4 id="enemyChaserTitle" class="font-bold text-red-400">Chaser (追擊者)</h4><p id="enemyChaserDesc" class="text-[11px] text-slate-400">數量眾多的基礎攻擊單位，會直線蜂擁向玩家。</p></div></div>
+<div class="p-2.5 bg-slate-900/40 rounded-lg border border-amber-500/20 flex items-start space-x-3"><span class="text-lg">🟠</span><div><h4 id="enemySpeederTitle" class="font-bold text-amber-400">Speeder (疾速突擊者)</h4><p id="enemySpeederDesc" class="text-[11px] text-slate-400">生命值較低但移動速度極快，考量玩家反應速度。</p></div></div>
+<div class="p-2.5 bg-slate-900/40 rounded-lg border border-purple-500/20 flex items-start space-x-3"><span class="text-lg">🟣</span><div><h4 id="enemySplitterTitle" class="font-bold text-purple-400">Splitter (裂變體)</h4><p id="enemySplitterDesc" class="text-[11px] text-slate-400">體型較大，被擊破時會迅速分裂成兩個高速小裂變體。</p></div></div>
+<div class="p-2.5 bg-slate-900/40 rounded-lg border border-teal-500/20 flex items-start space-x-3"><span class="text-lg">🔷</span><div><h4 id="enemySniperTitle" class="font-bold text-teal-400">Sniper (遠程狙擊手)</h4><p id="enemySniperDesc" class="text-[11px] text-slate-400">會與玩家保持距離，並定期發射高速能量彈幕。</p></div></div>
+<div class="p-2.5 bg-slate-900/40 rounded-lg border border-emerald-500/20 flex items-start space-x-3"><span class="text-lg">🟩</span><div><h4 id="enemyTankTitle" class="font-bold text-emerald-400">Tank (重裝坦克)</h4><p id="enemyTankDesc" class="text-[11px] text-slate-400">擁有龐大生命值與防禦，能阻擋大量的火力發射。</p></div></div>
+<div class="p-2.5 bg-slate-900/40 rounded-lg border border-amber-400/30 flex items-start space-x-3"><span class="text-lg">⭐</span><div><h4 id="enemyEliteTitle" class="font-bold text-amber-300">Elite (精英敵人)</h4><p id="enemyEliteDesc" class="text-[11px] text-slate-400">30 級後出現的金色精英。擁有極高生命（×5～7）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 140 的範圍爆炸（約 40 傷害）。60 級後精英進入狂暴狀態，額外 +25% 血量、+15% 速度，外圈發出紅金色脈衝。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。</p></div></div>
+</div></div>
+</div>
+<button id="closeGuideBtn" class="w-full mt-4 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs rounded-xl transition shadow uppercase cursor-pointer shrink-0"><span id="closeGuideBtnText">關閉圖鑑</span></button>
+</div>
+</div>
+
+<div id="settingsModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+<div class="neon-card p-6 rounded-3xl max-w-sm w-full space-y-5 border border-cyan-500/30">
+<h2 id="settingsTitle" class="text-xl font-black text-cyan-400 text-center">設定</h2>
+<div class="space-y-2"><label id="labelAimMode" class="text-xs font-bold text-slate-400 uppercase tracking-wider block">瞄準模式</label>
+<div class="grid grid-cols-2 gap-2">
+<button class="aim-mode-btn py-2 rounded-xl text-xs font-extrabold border transition cursor-pointer border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]" data-aim="auto"><span id="aimAutoText">自動瞄準</span></button>
+<button class="aim-mode-btn py-2 rounded-xl text-xs font-extrabold border transition cursor-pointer border-slate-700 text-slate-400 bg-slate-900/40" data-aim="manual"><span id="aimManualText">手動瞄準</span></button>
+</div></div>
+<div class="space-y-2"><label id="labelHandMode" class="text-xs font-bold text-slate-400 uppercase tracking-wider block">操作模式</label>
+<div class="grid grid-cols-2 gap-2">
+<button class="hand-mode-btn py-2 rounded-xl text-xs font-extrabold border transition cursor-pointer border-cyan-500 bg-cyan-500/20 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]" data-hand="right"><span id="handRightText">右手模式</span></button>
+<button class="hand-mode-btn py-2 rounded-xl text-xs font-extrabold border transition cursor-pointer border-slate-700 text-slate-400 bg-slate-900/40" data-hand="left"><span id="handLeftText">左手模式</span></button>
+</div></div>
+<button id="settingsCloseBtn" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-xs rounded-xl transition shadow uppercase cursor-pointer"><span id="settingsCloseBtnText">關閉設定</span></button>
+</div>
+</div>
+
+<div id="quitModal" class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+<div class="neon-card p-6 rounded-2xl max-w-sm w-full text-center space-y-4 border border-rose-500/40">
+<div class="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center mx-auto text-rose-400 text-xl font-bold">⚠️</div>
+<div><h2 id="quitModalTitle" class="text-xl font-black text-rose-400">確定退出遊戲？</h2><p id="quitModalDesc" class="text-xs text-slate-400 mt-1">未複製存檔碼的當前進度將會遺失。</p></div>
+<div class="grid grid-cols-2 gap-3 pt-2">
+<button id="cancelQuitBtn" class="py-2.5 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"><span id="cancelQuitBtnText">取消</span></button>
+<button id="confirmQuitBtn" class="py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition shadow cursor-pointer"><span id="confirmQuitBtnText">確定退出</span></button>
+</div>
+</div>
+</div>
+
+<div id="pauseModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md hidden">
+<div class="neon-card p-6 rounded-3xl max-w-sm w-full text-center space-y-4 border border-cyan-500/30">
+<h2 id="pauseTitle" class="text-2xl font-black text-white tracking-wider">遊戲暫停</h2>
+<div class="space-y-2 pt-2">
+<button id="resumeGameBtn" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs rounded-xl transition cursor-pointer uppercase">▶️ <span id="resumeBtnText">繼續遊戲</span></button>
+<button id="localSaveBtn" class="w-full py-3 bg-slate-900 border border-emerald-500/40 hover:bg-emerald-950/30 text-emerald-400 font-bold text-xs rounded-xl transition cursor-pointer uppercase">💾 <span id="localSaveBtnText">快速保存到本地</span></button>
+<button id="copySaveCodeBtn" class="w-full py-3 bg-slate-900 border border-amber-500/40 hover:bg-amber-950/30 text-amber-400 font-bold text-xs rounded-xl transition cursor-pointer uppercase">📋 <span id="copyCodeBtnText">複製文字存檔碼</span></button>
+<button id="restartGameBtn" class="w-full py-3 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer uppercase">🔄 <span id="restartBtnText">重新開始</span></button>
+<button id="pauseQuitBtn" class="w-full py-3 bg-slate-900 border border-rose-500/40 hover:bg-rose-950/30 text-rose-400 font-bold text-xs rounded-xl transition cursor-pointer uppercase">🚪 <span id="pauseQuitBtnText">退出主選單</span></button>
+</div>
+</div>
+</div>
+
+<div id="loadModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+<div class="neon-card p-6 rounded-3xl max-w-sm w-full space-y-4 border border-amber-500/30">
+<h2 id="loadModalTitle" class="text-xl font-black text-amber-400 text-center">貼上存檔碼</h2>
+<textarea id="saveCodeInput" class="w-full h-24 p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-cyan-300 focus:outline-none focus:border-amber-500 font-mono" placeholder="貼上複製的存檔代碼..."></textarea>
+<div class="grid grid-cols-2 gap-3">
+<button id="cancelLoadBtn" class="py-2.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl transition cursor-pointer"><span id="cancelLoadBtnText">取消</span></button>
+<button id="confirmLoadBtn" class="py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl transition shadow cursor-pointer"><span id="confirmLoadBtnText">載入進度</span></button>
+</div>
+</div>
+</div>
+
+<div id="levelUpModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md hidden">
+<div class="max-w-md w-full space-y-4 text-center">
+<div><span class="text-xs font-black tracking-widest text-cyan-400 uppercase">SYSTEM OVERDRIVE</span><h2 id="levelUpTitle" class="text-2xl sm:text-3xl font-black text-white neon-text-cyan">選擇加成能力</h2></div>
+<div id="upgradeCardsContainer" class="grid grid-cols-1 gap-3"></div>
+</div>
+</div>
+
+<div id="reviveModal" class="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+<div class="neon-card p-8 rounded-3xl max-w-sm w-full text-center space-y-6 border border-amber-500/50">
+<div><h2 class="text-2xl font-black text-amber-400">核心癱瘓</h2><p class="text-xs text-slate-400 mt-1">你可以在上一個本地存檔點復活。</p></div>
+<div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-2 text-left text-xs text-slate-300">
+<div>復活效果：</div>
+<div>• 恢復 50% 最大生命值</div>
+<div>• 獲得 5 秒無敵</div>
+<div>• 從最近的自動/手動存檔繼續</div>
+</div>
+<div class="grid grid-cols-1 gap-3 pt-2">
+<button id="reviveBtn" class="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm rounded-2xl shadow-lg transition uppercase tracking-wider">💫 從存檔復活</button>
+<button id="giveUpBtn" class="w-full py-3 bg-slate-900 border border-rose-500/40 hover:bg-rose-950/30 text-rose-400 font-bold text-xs rounded-xl transition cursor-pointer uppercase">放棄並重新開始</button>
+</div>
+<div id="noSaveHint" class="text-[11px] text-rose-400 hidden">沒有找到本地存檔，無法復活。</div>
+</div>
+</div>
+
+<div id="gameOverModal" class="absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md hidden">
+<div class="neon-card p-8 rounded-3xl max-w-sm w-full text-center space-y-6 border border-rose-500/40">
+<div><h2 id="gameOverTitle" class="text-3xl font-black text-rose-500 neon-text-pink">核心已毀損</h2><p id="gameOverSub" class="text-xs text-slate-400 mt-1">CORE OVERDRIVE TERMINATED</p></div>
+<div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-2">
+<div class="flex justify-between text-xs"><span class="text-slate-400" id="finalScoreLabel">最終得分:</span><strong id="finalScore" class="text-cyan-400">0</strong></div>
+<div class="flex justify-between text-xs"><span class="text-slate-400" id="finalKillsLabel">擊殺數量:</span><strong id="finalKills" class="text-amber-400">0</strong></div>
+</div>
+<button id="restartBtn" class="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-black text-sm rounded-2xl shadow-lg transition transform active:scale-95 cursor-pointer uppercase tracking-wider">🔄 <span id="restartBtnText">重新開始</span></button>
+</div>
+</div>
+
 <script>
-"use strict";
+/* 防止拖拽 / 右键菜单 / 缩放 */
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
+window.addEventListener('dragstart', e => e.preventDefault());
+['gesturestart','gesturechange','gestureend'].forEach(evt=>{document.addEventListener(evt,e=>e.preventDefault(),{passive:false})});
+document.addEventListener('touchmove',e=>{if(e.target===canvas){e.preventDefault()}},{passive:false});
 
-/* ================= 基础 ================= */
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d', { alpha: false });
-let W = 0, H = 0;
-const DPR = Math.min(window.devicePixelRatio || 1, 2);
-
-let isTouchMode = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-let lastTouchTime = 0;
-
-function resize() {
-  W = window.innerWidth;
-  H = window.innerHeight;
-  canvas.width = Math.floor(W * DPR);
-  canvas.height = Math.floor(H * DPR);
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
-  dashBtn.x = W - 84;
-  dashBtn.y = H - 104;
-  dashBtn.r = Math.min(44, W * 0.1);
-  buildVignette();
-}
-window.addEventListener('resize', resize);
-window.addEventListener('orientationchange', () => setTimeout(resize, 120));
-
-/* ================= 工具 ================= */
-const rand = (a, b) => a + Math.random() * (b - a);
-const randInt = (a, b) => Math.floor(rand(a, b + 1));
-const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
-const dist = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
-const pick = arr => arr[(Math.random() * arr.length) | 0];
-
-/* ================= 常量 ================= */
-const BLOCK = 400;
-const ROAD = 120;
-const GRID_N = 9;
-const WORLD = BLOCK * GRID_N;
-const MAX_ALLIES = 7;
-const ALLY_PRICE = 15;
-
-const FARM_MAP_W = 1600, FARM_MAP_H = 1200;
-const MINE_MAP_W = 1600, MINE_MAP_H = 1200;
-const SUBMAP_CENTER_X = FARM_MAP_W / 2, SUBMAP_CENTER_Y = FARM_MAP_H / 2;
-
-const TRANSPORT_TIME = 10;
-const COLLECT_TIME = 1.0;
-const NODE_RESPAWN = 5;
-const WORKER_MAX_HP = 100;
-
-/* ================= 模式配置 ================= */
-const MODES = {
-  south1835: {
-    id: 'south1835',
-    title: '棉花与黄金',
-    year: '1835',
-    subtitle: '美国南方 · 南北战争前',
-    playerName: '老大',
-    allyLabel: '黑人兄弟',
-    allyNames: ['黑人兄弟·棉花田','黑人兄弟·铁匠','黑人兄弟·逃亡者','黑人兄弟·自由人','黑人兄弟·猎人','黑人兄弟·木匠','黑人兄弟·牧人'],
-    enemyTemplates: [
-      { id:'slavecatcher', name:'奴隶捕手', color:'#4a3a2e', hp:30, speed:[100,150], fire:[0.9,1.8], dmg:8, range:600 },
-      { id:'overseer', name:'种植园监工', color:'#6b2a1a', hp:45, speed:[80,120], fire:[1.1,2.0], dmg:10, range:500 },
-      { id:'militia', name:'南方民兵', color:'#2a3a5a', hp:55, speed:[70,100], fire:[1.3,2.2], dmg:11, range:640 },
-      { id:'bounty', name:'赏金猎人', color:'#6b5a2e', hp:35, speed:[130,180], fire:[0.8,1.5], dmg:7, range:520 },
-      { id:'gambler', name:'赌徒', color:'#5a2a4a', hp:25, speed:[160,220], fire:[1.0,1.8], dmg:6, range:480 }
-    ],
-    subMaps: {
-      farm: { name:'棉花农场', shortName:'农场', resourceName:'棉花', price:8, mapColor:'#22301e', nodeFill:'rgba(235,235,220,0.95)', nodeType:'farm' },
-      mine: { name:'金矿矿洞', shortName:'矿洞', resourceName:'金矿', price:15, mapColor:'#1c1c22', nodeFill:'rgba(212,175,55,0.95)', nodeType:'mine' }
-    },
-    boost: {
-      type:'whip',
-      name:'鞭打加速',
-      boostPerStack:0.20,
-      maxStacks:5,
-      duration:10,
-      hpCost:10,
-      cost:0,
-      cooldown:0,
-      color:[200,40,20]
-    }
-  },
-  britain: {
-    id: 'britain',
-    title: '工业与资本',
-    year: '1900',
-    subtitle: '英国 · 二十世纪初',
-    playerName: '工厂老板',
-    allyLabel: '工人兄弟',
-    allyNames: ['工人兄弟·纺织工','工人兄弟·机械师','工人兄弟·矿工','工人兄弟·码头工','工人兄弟·铁路工','工人兄弟·学徒','工人兄弟·工头'],
-    enemyTemplates: [
-      { id:'striker', name:'罢工者', color:'#5a2a2a', hp:35, speed:[90,140], fire:[1.0,1.8], dmg:8, range:600 },
-      { id:'rival', name:'竞争厂主打手', color:'#4a4a2a', hp:50, speed:[80,120], fire:[1.1,2.0], dmg:10, range:520 },
-      { id:'pinkerton', name:'平克顿侦探', color:'#2a3a4a', hp:60, speed:[70,100], fire:[1.2,2.1], dmg:11, range:640 },
-      { id:'unionist', name:'工会分子', color:'#3a5a3a', hp:40, speed:[120,180], fire:[0.9,1.6], dmg:7, range:540 },
-      { id:'thug', name:'街头暴徒', color:'#5a3a2a', hp:30, speed:[150,200], fire:[0.8,1.5], dmg:6, range:480 }
-    ],
-    subMaps: {
-      farm: { name:'工厂车间', shortName:'车间', resourceName:'布匹', price:10, mapColor:'#2a2620', nodeFill:'rgba(220,200,180,0.95)', nodeType:'farm' },
-      mine: { name:'投资基地', shortName:'投资', resourceName:'股息', price:20, mapColor:'#1c1c22', nodeFill:'rgba(212,175,55,0.95)', nodeType:'mine' }
-    },
-    boost: {
-      type:'money',
-      name:'加钱加班',
-      boostPerStack:0.20,
-      maxStacks:5,
-      duration:10,
-      hpCost:0,
-      cost:20,
-      cooldown:0,
-      color:[212,175,55]
-    }
-  },
-  germany: {
-    id: 'germany',
-    title: '抵抗与信仰',
-    year: '1943',
-    subtitle: '德国 · 二战期间',
-    playerName: 'USSR 卧底',
-    allyLabel: '反纳粹兄弟',
-    allyNames: ['反纳粹兄弟·裁缝','反纳粹兄弟·铁匠','反纳粹兄弟·教师','反纳粹兄弟·印刷工','反纳粹兄弟·医生','反纳粹兄弟·面包师','反纳粹兄弟·学生'],
-    enemyTemplates: [
-      { id:'ss', name:'党卫军', color:'#1a1a1a', hp:55, speed:[80,120], fire:[1.0,1.9], dmg:10, range:620 },
-      { id:'gestapo', name:'盖世太保', color:'#2a2a2e', hp:45, speed:[90,140], fire:[1.1,2.0], dmg:9, range:560 },
-      { id:'patrol', name:'巡逻兵', color:'#3a3a4a', hp:50, speed:[70,100], fire:[1.2,2.1], dmg:11, range:640 },
-      { id:'informant', name:'线人', color:'#4a3a2a', hp:30, speed:[140,190], fire:[0.9,1.7], dmg:7, range:500 },
-      { id:'officer', name:'纳粹军官', color:'#1a1a2a', hp:70, speed:[60,90], fire:[1.3,2.2], dmg:12, range:660 }
-    ],
-    subMaps: {
-      farm: { name:'战场捡遗物', shortName:'战场', resourceName:'遗物', price:12, mapColor:'#2a2418', nodeFill:'rgba(220,200,140,0.95)', nodeType:'farm' },
-      mine: { name:'偷纳粹金库', shortName:'金库', resourceName:'黄金', price:25, mapColor:'#1a1610', nodeFill:'rgba(212,175,55,0.95)', nodeType:'mine' }
-    },
-    boost: {
-      type:'faith',
-      name:'信仰支持',
-      boostPerStack:0.25,
-      maxStacks:4,
-      duration:8,
-      hpCost:0,
-      cost:0,
-      cooldown:2,
-      color:[200,100,60]
-    }
-  }
+/* 平衡参数 */
+const BALANCE={
+enemyHpCurve:{linearPhaseMaxLevel:25,linearPerLevel:0.06,expBase:1.075,expMultiplier:0.62},
+enemyDmgCurve:{linearPhaseMaxLevel:35,linearPerLevel:0.012,expBase:1.028,expMultiplier:0.55},
+enemySpeedPerLevel:0.01,enemySpeedCap:1.35,
+timePressurePerMinute:0.07,timePressureCap:2.0,
+hpPerKill:0.8,hpPerBossKill:30,healDecayPerLevel:0.004,healMinMult:0.4,
+bodyDamagePerSec:12,bossBodyDamagePerSec:16,
+sniperBulletDamage:8,sniperInterval:2.2,
+bossBurstDamage:6,bossBurstInterval:2.8,bossBurstCount:10,bossHpBonusPerLevel:0.10,
+bladeBlockRadius:14,
+eliteStartLevel:30,eliteChanceLow:0.15,eliteChanceHigh:0.28,
+eliteHpMultLow:5,eliteHpMultHigh:7,eliteDmgMult:2.0,eliteRadiusMult:1.5,eliteSpeedBonus:1.3,
+eliteBladeResist:0.5,eliteDeathExplosionDamage:40,eliteDeathExplosionRadius:140,eliteXpMult:3,eliteHealMult:0.4,
+eliteBerserkLevel:60,eliteBerserkHpBonus:0.25,eliteBerserkSpeedBonus:0.15,
+damageMultMax:1.35,damageMultDecay:0.015,damageMultFloor:1.20,
+fireRateMultMax:1.25,fireRateMultDecay:0.012,fireRateMultFloor:1.12,
+xpCurve:{basePercent:0.15,decayPerLevel:0.96,minPercent:0.03,
+typeMultiplier:{chaser:1.0,speeder:1.15,splitter:1.5,miniSplitter:0.5,sniper:1.3,tank:2.0}}
 };
-
-let mode = MODES.south1835;
-let screen = 'start';
-
-/* ================= 全局经济 / 场景 ================= */
-let currentMap = 'city';
-let money = 100;
-let shopOpen = false;
-let transports = [];
-
-const farm = { warehouse:0, allies:[], nodes:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
-const mine = { warehouse:0, allies:[], nodes:[], lastUpdate:0, boostStacks:0, boostTimer:0, boostCooldown:0, whipFlash:0 };
-
-/* ================= 摇杆 ================= */
-const STICK_RADIUS = Math.min(64, Math.min(window.innerWidth, window.innerHeight) * 0.14);
-const moveStick = { active:false, id:null, baseX:0, baseY:0, curX:0, curY:0, dx:0, dy:0 };
-const aimStick  = { active:false, id:null, baseX:0, baseY:0, curX:0, curY:0, dx:0, dy:0 };
-const dashBtn = { x:0, y:0, r:42 };
-
-/* ================= 状态 ================= */
-let buildings = [];
-let lamps = [];
-let decals = [];
-let enemies = [];
-let bullets = [];
-let particles = [];
-let pickups = [];
-let allies = [];
-let cam = { x:0, y:0 };
-let shake = 0;
-let kills = 0;
-let gameOver = false;
-let hitFlash = 0;
-let time = 0;
-let last = 0;
-let respawnTimer = 0;
-let combo = 0;
-let comboTimer = 0;
-let supplyTimer = 6;
-
-let autoTarget = null;
-let autoTargetTimer = 0;
-
-let level = 1;
-let xp = 0;
-let xpNext = 8;
-let upgradeUI = null;
-let pausedForUpgrade = false;
-
-const upgradePool = [
-  { id:'dmg', name:'淬火铅弹', desc:'子弹伤害 +15%', apply:()=>player.bulletDmg*=1.15 },
-  { id:'firerate', name:'快枪手', desc:'射速 +12%', apply:()=>player.fireRate*=0.88 },
-  { id:'magsize', name:'扩容弹袋', desc:'弹药容量 +6', apply:()=>{player.mag+=6;player.ammo=player.mag;} },
-  { id:'reload', name:'快速装填', desc:'装填速度 +20%', apply:()=>player.reloadTime*=0.8 },
-  { id:'speed', name:'轻快步履', desc:'移动速度 +10%', apply:()=>player.moveSpeed*=1.1 },
-  { id:'dashcd', name:'田野身法', desc:'冲刺冷却 -18%', apply:()=>player.dashMaxCd*=0.82 },
-  { id:'maxhp', name:'坚韧体魄', desc:'最大生命 +20', apply:()=>{player.maxHp+=20;player.hp+=20;} },
-  { id:'pickup', name:'拾荒手套', desc:'拾取范围 +40%', apply:()=>player.pickupRange*=1.4 },
-  { id:'drone', name:'猎犬', desc:'获得一只猎犬', apply:()=>addDrone() },
-  { id:'pierce', name:'穿甲弹', desc:'子弹可穿透 1 个敌人', apply:()=>player.pierce+=1 },
-  { id:'ally', name:'招募兄弟', desc:'招募一名兄弟', apply:()=>addAlly(player.x+rand(-40,40),player.y+rand(-40,40)) },
-  { id:'allyhp', name:'兄弟情义', desc:'所有兄弟生命 +50% 并回满', apply:()=>{for(const a of allies){a.maxHp*=1.5;a.hp=a.maxHp;}} }
-];
-
-/* ================= 玩家 ================= */
-const player = {
-  x:0, y:0, vx:0, vy:0, r:11, angle:0,
-  hp:100, maxHp:100,
-  ammo:30, mag:30,
-  fireCd:0, reloadT:0, reloadTime:1.15,
-  dashCd:0, dashMaxCd:0.85, dashTime:0,
-  hurtCd:0, bulletDmg:14, fireRate:0.075,
-  moveSpeed:330, pickupRange:28, pierce:0,
-  drones:[], droneAngle:0, name:'老大'
-};
-
-/* ================= 盟友 ================= */
-function makeAlly(x, y) {
-  return {
-    x, y, r:12, hp:90, maxHp:90, speed:280, angle:0,
-    attackCd:0, hurt:0, dead:false,
-    name: pick(mode.allyNames), punchT:0
-  };
-}
-
-function addAlly(x, y) {
-  if (allies.length >= MAX_ALLIES) return false;
-  if (x === undefined) x = player.x + rand(-40,40);
-  if (y === undefined) y = player.y + rand(-40,40);
-  const a = makeAlly(x, y);
-  allies.push(a);
-  for (let i=0;i<14;i++) spawnParticle(x,y,rand(0,Math.PI*2),rand(40,220),'212,175,55',rand(0.2,0.5),rand(2,4));
-  return true;
-}
-
-/* ================= 副地图兄弟 ================= */
-function makeWorker(x, y) {
-  return {
-    x: x!==undefined?x:SUBMAP_CENTER_X+rand(-80,80),
-    y: y!==undefined?y:SUBMAP_CENTER_Y+rand(-80,80),
-    r:11, hp:WORKER_MAX_HP, maxHp:WORKER_MAX_HP,
-    state:'idle', targetNode:null, collectTimer:0,
-    angle:0, bob:rand(0,Math.PI*2), hurtT:0
-  };
-}
-
-/* ================= 键鼠 ================= */
-const keys = {};
-let mouse = { x:0, y:0, down:false };
-
-window.addEventListener('keydown', e => {
-  keys[e.code] = true;
-  if (e.code === 'Space') e.preventDefault();
-  if (gameOver && e.code === 'KeyR' && currentMap === 'city' && screen === 'game') init();
-  if (pausedForUpgrade && currentMap === 'city') {
-    if (e.code === 'Digit1') selectUpgrade(0);
-    if (e.code === 'Digit2') selectUpgrade(1);
-    if (e.code === 'Digit3') selectUpgrade(2);
-  }
-  initAudio();
-});
-window.addEventListener('keyup', e => { keys[e.code] = false; });
-
-window.addEventListener('mousemove', e => {
-  if (performance.now() - lastTouchTime < 600) return;
-  isTouchMode = false;
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
-});
-window.addEventListener('mousedown', e => {
-  if (e.button === 0) {
-    mouse.down = true;
-    if (!isTouchMode) initAudio();
-    handleClick(e.clientX, e.clientY);
-  }
-});
-window.addEventListener('mouseup', e => { if (e.button === 0) mouse.down = false; });
-window.addEventListener('contextmenu', e => e.preventDefault());
-window.addEventListener('blur', () => {
-  mouse.down = false;
-  for (const k in keys) keys[k] = false;
-  resetSticks();
-});
-
-/* ================= 触摸 ================= */
-function resetSticks() {
-  moveStick.active = false; moveStick.id = null; moveStick.dx = moveStick.dy = 0;
-  aimStick.active = false;  aimStick.id = null;  aimStick.dx = aimStick.dy = 0;
-}
-
-function updateStick(s, x, y) {
-  let dx = x - s.baseX, dy = y - s.baseY;
-  const d = Math.hypot(dx, dy);
-  if (d > STICK_RADIUS) { dx = (dx/d)*STICK_RADIUS; dy = (dy/d)*STICK_RADIUS; }
-  s.curX = s.baseX + dx; s.curY = s.baseY + dy;
-  s.dx = dx / STICK_RADIUS; s.dy = dy / STICK_RADIUS;
-}
-
-function onTouchStart(e) {
-  e.preventDefault();
-  lastTouchTime = performance.now();
-  isTouchMode = true;
-  initAudio();
-
-  for (const t of e.changedTouches) {
-    handleClick(t.clientX, t.clientY);
-  }
-
-  if (screen !== 'game' || shopOpen || pausedForUpgrade || gameOver || currentMap !== 'city') return;
-
-  for (const t of e.changedTouches) {
-    const x = t.clientX, y = t.clientY;
-    if (dist(x, y, dashBtn.x, dashBtn.y) < dashBtn.r + 10) { tryDash(); continue; }
-    if (x < W/2) {
-      if (!moveStick.active) {
-        moveStick.active = true; moveStick.id = t.identifier;
-        moveStick.baseX = x; moveStick.baseY = y;
-        moveStick.curX = x; moveStick.curY = y;
-        moveStick.dx = 0; moveStick.dy = 0;
-      }
-    } else {
-      if (!aimStick.active) {
-        aimStick.active = true; aimStick.id = t.identifier;
-        aimStick.baseX = x; aimStick.baseY = y;
-        aimStick.curX = x; aimStick.curY = y;
-        aimStick.dx = 0; aimStick.dy = 0;
-      }
-    }
-  }
-}
-
-function onTouchMove(e) {
-  e.preventDefault();
-  lastTouchTime = performance.now();
-  for (const t of e.changedTouches) {
-    if (moveStick.active && t.identifier === moveStick.id) updateStick(moveStick, t.clientX, t.clientY);
-    else if (aimStick.active && t.identifier === aimStick.id) updateStick(aimStick, t.clientX, t.clientY);
-  }
-}
-
-function onTouchEnd(e) {
-  e.preventDefault();
-  for (const t of e.changedTouches) {
-    if (moveStick.active && t.identifier === moveStick.id) { moveStick.active = false; moveStick.id = null; moveStick.dx = 0; moveStick.dy = 0; }
-    if (aimStick.active && t.identifier === aimStick.id) { aimStick.active = false; aimStick.id = null; aimStick.dx = 0; aimStick.dy = 0; }
-  }
-}
-
-window.addEventListener('touchstart', onTouchStart, { passive: false });
-window.addEventListener('touchmove', onTouchMove, { passive: false });
-window.addEventListener('touchend', onTouchEnd, { passive: false });
-window.addEventListener('touchcancel', onTouchEnd, { passive: false });
-
-/* ================= 音频 ================= */
-let actx = null, noiseBuf = null;
-function initAudio() {
-  if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
-  try {
-    actx = new (window.AudioContext || window.webkitAudioContext)();
-    const len = Math.floor(actx.sampleRate * 0.4);
-    noiseBuf = actx.createBuffer(1, len, actx.sampleRate);
-    const d = noiseBuf.getChannelData(0);
-    for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
-  } catch (e) { actx = null; }
-}
-function sfxShot(vol, pitch) {
-  if (!actx) return;
-  vol = vol||0.13; pitch = pitch||1;
-  const t = actx.currentTime;
-  const src = actx.createBufferSource();
-  src.buffer = noiseBuf;
-  src.playbackRate.value = pitch;
-  const f = actx.createBiquadFilter();
-  f.type = 'bandpass';
-  f.frequency.setValueAtTime(1700*pitch, t);
-  f.frequency.exponentialRampToValueAtTime(380, t+0.09);
-  f.Q.value = 0.7;
-  const g = actx.createGain();
-  g.gain.setValueAtTime(vol, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t+0.13);
-  src.connect(f); f.connect(g); g.connect(actx.destination);
-  src.start(t); src.stop(t+0.16);
-}
-function sfxHit(vol) {
-  if (!actx) return;
-  const t = actx.currentTime;
-  const o = actx.createOscillator();
-  o.type = 'square';
-  o.frequency.setValueAtTime(220, t);
-  o.frequency.exponentialRampToValueAtTime(60, t+0.08);
-  const g = actx.createGain();
-  g.gain.setValueAtTime(vol||0.08, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t+0.1);
-  o.connect(g); g.connect(actx.destination);
-  o.start(t); o.stop(t+0.12);
-}
-function sfxCash() {
-  if (!actx) return;
-  const t = actx.currentTime;
-  const o = actx.createOscillator();
-  o.type = 'triangle';
-  o.frequency.setValueAtTime(880, t);
-  o.frequency.setValueAtTime(1320, t+0.06);
-  const g = actx.createGain();
-  g.gain.setValueAtTime(0.1, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t+0.18);
-  o.connect(g); g.connect(actx.destination);
-  o.start(t); o.stop(t+0.2);
-}
-function sfxWhip() {
-  if (!actx) return;
-  const t = actx.currentTime;
-  const src = actx.createBufferSource();
-  src.buffer = noiseBuf;
-  src.playbackRate.value = 2.5;
-  const f = actx.createBiquadFilter();
-  f.type = 'highpass';
-  f.frequency.setValueAtTime(2000, t);
-  f.frequency.exponentialRampToValueAtTime(500, t+0.08);
-  const g = actx.createGain();
-  g.gain.setValueAtTime(0.18, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t+0.12);
-  src.connect(f); f.connect(g); g.connect(actx.destination);
-  src.start(t); src.stop(t+0.14);
-}
-function sfxFaith() {
-  if (!actx) return;
-  const t = actx.currentTime;
-  [523, 659, 784].forEach((freq, i) => {
-    const o = actx.createOscillator();
-    o.type = 'sine';
-    o.frequency.setValueAtTime(freq, t + i*0.04);
-    const g = actx.createGain();
-    g.gain.setValueAtTime(0.06, t + i*0.04);
-    g.gain.exponentialRampToValueAtTime(0.001, t + i*0.04 + 0.2);
-    o.connect(g); g.connect(actx.destination);
-    o.start(t + i*0.04); o.stop(t + i*0.04 + 0.22);
-  });
-}
-
-/* ================= 光晕 ================= */
-const glowCanvas = document.createElement('canvas');
-glowCanvas.width = glowCanvas.height = 256;
-(function () {
-  const g2 = glowCanvas.getContext('2d');
-  const grd = g2.createRadialGradient(128,128,0,128,128,128);
-  grd.addColorStop(0, 'rgba(255,196,120,0.55)');
-  grd.addColorStop(0.35, 'rgba(255,170,90,0.20)');
-  grd.addColorStop(1, 'rgba(255,150,60,0)');
-  g2.fillStyle = grd;
-  g2.fillRect(0,0,256,256);
-})();
-
-let vignette = null;
-function buildVignette() {
-  const grd = ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.28, W/2,H/2,Math.max(W,H)*0.78);
-  grd.addColorStop(0, 'rgba(0,0,0,0)');
-  grd.addColorStop(0.6, 'rgba(0,0,0,0.35)');
-  grd.addColorStop(1, 'rgba(0,0,0,0.88)');
-  vignette = grd;
-}
-
-/* ================= 世界生成 ================= */
-function makeBuilding(x, y, w, h) {
-  const tints = ['#2e241c','#352a1f','#28221c','#332a1e','#2b2620','#383028','#302a20'];
-  const b = { x,y,w,h, col: pick(tints), details:[] };
-  const n = randInt(1,3);
-  for (let i=0;i<n;i++) {
-    const dw = rand(12, Math.min(46, w*0.45));
-    const dh = rand(12, Math.min(46, h*0.45));
-    if (w-dw < 20 || h-dh < 20) continue;
-    b.details.push({ x:x+rand(8,w-dw-8), y:y+rand(8,h-dh-8), w:dw, h:dh, t: Math.random()<0.55?'vent':'sky' });
-  }
-  return b;
-}
-
-function genWorld() {
-  buildings = [];
-  lamps = [];
-  for (let bx=0;bx<GRID_N;bx++) {
-    for (let by=0;by<GRID_N;by++) {
-      const x0 = bx*BLOCK + ROAD/2, y0 = by*BLOCK + ROAD/2;
-      const size = BLOCK - ROAD, cw = size/2, ch = size/2;
-      for (let i=0;i<2;i++) for (let j=0;j<2;j++) {
-        const px = rand(16,34), py = rand(16,34);
-        const x = x0 + i*cw + px, y = y0 + j*ch + py;
-        const w = cw - px*2, h = ch - py*2;
-        if (w < 44 || h < 44) continue;
-        buildings.push(makeBuilding(x,y,w,h));
-      }
-    }
-  }
-  for (let bx=0;bx<=GRID_N;bx++) for (let by=0;by<=GRID_N;by++) lamps.push({ x:bx*BLOCK, y:by*BLOCK });
-}
-
-function initSubMap(mapState, type) {
-  mapState.nodes = [];
-  for (let i=0;i<16;i++) {
-    let x, y, tries = 0;
-    do {
-      x = rand(160, FARM_MAP_W-160); y = rand(160, FARM_MAP_H-160);
-      tries++;
-    } while (tries < 30 && dist(x,y,SUBMAP_CENTER_X,SUBMAP_CENTER_Y) < 180);
-    mapState.nodes.push({ x, y, r:16, amount:3, respawnTimer:0, type });
-  }
-  mapState.lastUpdate = performance.now();
-}
-
-/* ================= 运送队列 ================= */
-function addTransport(type, opts) {
-  transports.push(Object.assign({ type, timer:TRANSPORT_TIME, maxTime:TRANSPORT_TIME }, opts||{}));
-}
-
-function updateTransports(dt) {
-  for (let i=transports.length-1;i>=0;i--) {
-    const t = transports[i];
-    t.timer -= dt;
-    if (t.timer <= 0) {
-      if (t.type === 'ally-to-farm') for (let j=0;j<t.count;j++) farm.allies.push(makeWorker());
-      else if (t.type === 'ally-to-mine') for (let j=0;j<t.count;j++) mine.allies.push(makeWorker());
-      else if (t.type === 'ally-to-city') {
-        const space = MAX_ALLIES - allies.length;
-        const actual = Math.min(t.count, space);
-        for (let j=0;j<actual;j++) addAlly(player.x+rand(-40,40), player.y+rand(-40,40));
-        const extra = t.count - actual;
-        if (extra > 0) {
-          const back = t.from === 'farm' ? farm : mine;
-          for (let j=0;j<extra;j++) back.allies.push(makeWorker());
-        }
-      } else if (t.type === 'resource') {
-        const cfg = t.resourceType === 'farm' ? mode.subMaps.farm : mode.subMaps.mine;
-        money += Math.floor(t.amount * cfg.price);
-        sfxCash();
-      }
-      transports.splice(i, 1);
-    }
-  }
-}
-
-/* ================= 加速按钮 ================= */
-function useBoost(mapState) {
-  const boost = mode.boost;
-  if (mapState.boostCooldown > 0) return;
-
-  if (boost.type === 'whip') {
-    if (mapState.allies.length === 0) return;
-    mapState.boostStacks = Math.min(mapState.boostStacks+1, boost.maxStacks);
-    mapState.boostTimer = boost.duration;
-    mapState.whipFlash = 0.45;
-    sfxWhip();
-    for (const a of mapState.allies) {
-      a.hp -= boost.hpCost;
-      a.hurtT = 0.45;
-      for (let k=0;k<6;k++) spawnParticle(a.x, a.y, rand(-Math.PI*0.8,-Math.PI*0.2), rand(60,200), '200,30,20', rand(0.3,0.6), rand(2,4));
-      for (let k=0;k<4;k++) spawnParticle(a.x, a.y-a.r-6, rand(0,Math.PI*2), rand(80,160), '255,220,180', rand(0.15,0.3), rand(1.5,3));
-      if (a.hp <= 0) { a.hp = 0; a.dead = true; }
-    }
-  } else if (boost.type === 'money') {
-    if (money < boost.cost) return;
-    money -= boost.cost;
-    mapState.boostStacks = Math.min(mapState.boostStacks+1, boost.maxStacks);
-    mapState.boostTimer = boost.duration;
-    mapState.whipFlash = 0.25;
-    sfxCash();
-  } else if (boost.type === 'faith') {
-    mapState.boostCooldown = boost.cooldown;
-    mapState.boostStacks = Math.min(mapState.boostStacks+1, boost.maxStacks);
-    mapState.boostTimer = boost.duration;
-    mapState.whipFlash = 0.2;
-    sfxFaith();
-  }
-}
-
-/* ================= 副地图生产 ================= */
-function updateSubMapAllies(mapState, dt) {
-  if (mapState.boostTimer > 0) {
-    mapState.boostTimer -= dt;
-    if (mapState.boostTimer <= 0) { mapState.boostTimer = 0; mapState.boostStacks = 0; }
-  }
-  if (mapState.boostCooldown > 0) mapState.boostCooldown -= dt;
-  if (mapState.whipFlash > 0) mapState.whipFlash -= dt;
-
-  const boost = mode.boost;
-  const speedMult = 1 + boost.boostPerStack * mapState.boostStacks;
-  const collectTime = COLLECT_TIME / speedMult;
-
-  for (const a of mapState.allies) {
-    a.bob += dt * 6;
-    if (a.hurtT > 0) a.hurtT -= dt;
-    if (a.hp < a.maxHp) a.hp = Math.min(a.maxHp, a.hp + 3*dt);
-
-    if (a.state === 'idle') {
-      let nearest = null, nd = Infinity;
-      for (const n of mapState.nodes) {
-        if (n.amount <= 0) continue;
-        const d = dist(a.x, a.y, n.x, n.y);
-        if (d < nd) { nd = d; nearest = n; }
-      }
-      if (nearest) { a.targetNode = nearest; a.state = 'moving'; }
-    } else if (a.state === 'moving') {
-      if (!a.targetNode || a.targetNode.amount <= 0) { a.state = 'idle'; a.targetNode = null; continue; }
-      const d = dist(a.x, a.y, a.targetNode.x, a.targetNode.y);
-      if (d < a.r + a.targetNode.r + 4) { a.state = 'collecting'; a.collectTimer = collectTime; }
-      else {
-        const ang = Math.atan2(a.targetNode.y-a.y, a.targetNode.x-a.x);
-        const spd = 130 * speedMult;
-        a.x += Math.cos(ang)*spd*dt; a.y += Math.sin(ang)*spd*dt; a.angle = ang;
-      }
-    } else if (a.state === 'collecting') {
-      a.collectTimer -= dt;
-      if (a.collectTimer <= 0) {
-        if (a.targetNode && a.targetNode.amount > 0) {
-          a.targetNode.amount--;
-          mapState.warehouse++;
-          if (a.targetNode.amount <= 0) a.targetNode.respawnTimer = NODE_RESPAWN;
-        }
-        a.state = 'idle'; a.targetNode = null;
-      }
-    }
-  }
-
-  for (let i=mapState.allies.length-1;i>=0;i--) {
-    if (mapState.allies[i].dead) {
-      const a = mapState.allies[i];
-      for (let k=0;k<12;k++) spawnParticle(a.x, a.y, rand(0,Math.PI*2), rand(40,200), '120,70,40', rand(0.3,0.7), rand(2,4));
-      mapState.allies.splice(i, 1);
-    }
-  }
-
-  for (const n of mapState.nodes) {
-    if (n.amount <= 0) {
-      n.respawnTimer -= dt;
-      if (n.respawnTimer <= 0) n.amount = 3;
-    }
-  }
-}
-
-function calcOffline(mapState) {
-  const now = performance.now();
-  const elapsed = (now - mapState.lastUpdate) / 1000;
-  if (elapsed > 0.05) {
-    mapState.warehouse += mapState.allies.length * 0.30 * elapsed;
-    mapState.boostStacks = 0; mapState.boostTimer = 0; mapState.boostCooldown = 0;
-    for (const n of mapState.nodes) {
-      if (n.amount <= 0) { n.respawnTimer -= elapsed; if (n.respawnTimer <= 0) n.amount = 3; }
-    }
-  }
-  mapState.lastUpdate = now;
-}
-
-/* ================= 场景切换 ================= */
-function switchMap(target) {
-  if (target === currentMap) return;
-  if (currentMap === 'farm') calcOffline(farm);
-  if (currentMap === 'mine') calcOffline(mine);
-  currentMap = target;
-  shopOpen = false;
-  resetSticks();
-  if (target === 'farm') farm.lastUpdate = performance.now();
-  else if (target === 'mine') mine.lastUpdate = performance.now();
-  else if (target === 'city') { cam.x = player.x; cam.y = player.y; }
-}
-
-/* ================= 商店逻辑 ================= */
-function buyBullets() {
-  if (money < 20) return;
-  money -= 20; player.mag += 15; player.ammo = player.mag; sfxCash();
-}
-function buyHealth() {
-  if (money < 15) return;
-  money -= 15; player.hp = Math.min(player.maxHp, player.hp+30); sfxCash();
-}
-function buyAlly() {
-  if (money < ALLY_PRICE) return;
-  if (allies.length >= MAX_ALLIES) return;
-  money -= ALLY_PRICE;
-  addAlly(player.x+rand(-40,40), player.y+rand(-40,40));
-  sfxCash();
-}
-function sendAllyToFarm() { if (allies.length === 0) return; allies.pop().dead = true; addTransport('ally-to-farm', { count:1 }); }
-function sendAllyToMine() { if (allies.length === 0) return; allies.pop().dead = true; addTransport('ally-to-mine', { count:1 }); }
-
-function shipResources(mapState, resourceType) {
-  const amount = Math.floor(mapState.warehouse);
-  if (amount <= 0) return;
-  mapState.warehouse -= amount;
-  addTransport('resource', { amount, resourceType });
-}
-
-function recallAllies(mapState, from) {
-  const count = mapState.allies.length;
-  if (count <= 0) return;
-  mapState.allies = [];
-  addTransport('ally-to-city', { count, from });
-}
-
-/* ================= 开始页面布局 ================= */
-function getStartLayout() {
-  const modes = [MODES.south1835, MODES.britain, MODES.germany];
-  const cardW = Math.min(360, W - 40);
-  const cardH = Math.min(108, H * 0.17);
-  const gap = 14;
-  const totalH = modes.length * cardH + (modes.length-1) * gap;
-  const startY = (H - totalH) / 2 + 20;
-  const cards = [];
-  for (let i=0;i<modes.length;i++) {
-    cards.push({ x:(W-cardW)/2, y:startY+i*(cardH+gap), w:cardW, h:cardH, mode:modes[i] });
-  }
-  return { cards, cardW, cardH, gap };
-}
-
-/* ================= 点击处理 ================= */
-function handleClick(x, y) {
-  if (screen === 'start') {
-    const L = getStartLayout();
-    for (const c of L.cards) {
-      if (x > c.x && x < c.x+c.w && y > c.y && y < c.y+c.h) {
-        mode = c.mode;
-        screen = 'game';
-        initAudio();
-        init();
-        return;
-      }
-    }
-    return;
-  }
-
-  const topY = 14;
-  const btnW = 78, btnH = 34, gap = 8;
-  const startX = 18;
-  const mapBtns = [
-    { label:'主城', target:'city' },
-    { label: mode.subMaps.farm.shortName, target:'farm' },
-    { label: mode.subMaps.mine.shortName, target:'mine' }
-  ];
-  for (let i=0;i<mapBtns.length;i++) {
-    const bx = startX + i*(btnW+gap);
-    if (x > bx && x < bx+btnW && y > topY && y < topY+btnH) {
-      switchMap(mapBtns[i].target);
-      return;
-    }
-  }
-
-  const shopBtnX = W-120, shopBtnY = 14, shopBtnW = 100, shopBtnH = 34;
-  if (x > shopBtnX && x < shopBtnX+shopBtnW && y > shopBtnY && y < shopBtnY+shopBtnH) {
-    shopOpen = !shopOpen;
-    return;
-  }
-
-  if (shopOpen) {
-    const panelW = Math.min(420, W-40);
-    const panelH = 450;
-    const px = (W-panelW)/2, py = (H-panelH)/2;
-    if (x > px+panelW-46 && x < px+panelW-10 && y > py+10 && y < py+42) { shopOpen = false; return; }
-    const itemH = 58;
-    const items = [
-      { action: buyBullets, label:'补充弹药 15发' },
-      { action: buyHealth, label:'草药酒 +30' },
-      { action: buyAlly, label:'雇佣兄弟' },
-      { action: sendAllyToFarm, label:'派遣→'+mode.subMaps.farm.name },
-      { action: sendAllyToMine, label:'派遣→'+mode.subMaps.mine.name },
-      { action: () => { screen = 'start'; shopOpen = false; }, label:'返回模式选择' }
-    ];
-    const startY = py + 70;
-    for (let i=0;i<items.length;i++) {
-      const iy = startY + i*(itemH+8);
-      if (x > px+24 && x < px+panelW-24 && y > iy && y < iy+itemH) { items[i].action(); return; }
-    }
-    return;
-  }
-
-  if (currentMap === 'farm' || currentMap === 'mine') {
-    const mapState = currentMap === 'farm' ? farm : mine;
-    const resourceType = currentMap === 'farm' ? 'farm' : 'mine';
-    const btnW2 = Math.min(180, W*0.4);
-    const btnH2 = 48;
-    const bx1 = 30, by1 = H-70;
-    const bx2 = W-btnW2-30, by2 = H-70;
-
-    const boostBtnW = Math.min(280, W*0.58);
-    const boostBtnH = 50;
-    const boostBtnX = (W-boostBtnW)/2;
-    const boostBtnY = 112;
-    if (x > boostBtnX && x < boostBtnX+boostBtnW && y > boostBtnY && y < boostBtnY+boostBtnH) {
-      useBoost(mapState);
-      return;
-    }
-
-    if (x > bx1 && x < bx1+btnW2 && y > by1 && y < by1+btnH2) { shipResources(mapState, resourceType); return; }
-    if (x > bx2 && x < bx2+btnW2 && y > by2 && y < by2+btnH2) { recallAllies(mapState, currentMap); return; }
-  }
-
-  if (pausedForUpgrade && upgradeUI && currentMap === 'city') {
-    const L = getUpgradeLayout();
-    for (let i=0;i<L.rects.length;i++) {
-      const r = L.rects[i];
-      if (x > r.x && x < r.x+r.w && y > r.y && y < r.y+r.h) { selectUpgrade(i); return; }
-    }
-  }
-
-  if (gameOver && currentMap === 'city') {
-    if (x > W/2-130 && x < W/2+130 && y > H/2+40 && y < H/2+120) init();
-  }
-}
-
-/* ================= 碰撞 / 视线 ================= */
-function pointInBuilding(x, y) {
-  for (let i=0;i<buildings.length;i++) {
-    const b = buildings[i];
-    if (x >= b.x && x <= b.x+b.w && y >= b.y && y <= b.y+b.h) return true;
-  }
-  return false;
-}
-
-function pushOut(o, r) {
-  for (let i=0;i<buildings.length;i++) {
-    const b = buildings[i];
-    if (o.x+r < b.x || o.x-r > b.x+b.w || o.y+r < b.y || o.y-r > b.y+b.h) continue;
-    const cx = clamp(o.x, b.x, b.x+b.w);
-    const cy = clamp(o.y, b.y, b.y+b.h);
-    const dx = o.x-cx, dy = o.y-cy;
-    const d2 = dx*dx + dy*dy;
-    if (d2 < r*r) {
-      if (d2 > 0.0001) {
-        const d = Math.sqrt(d2);
-        o.x += (dx/d)*(r-d); o.y += (dy/d)*(r-d);
-      } else {
-        const l = o.x-b.x, rr = b.x+b.w-o.x, t = o.y-b.y, bb = b.y+b.h-o.y;
-        const m = Math.min(l,rr,t,bb);
-        if (m === l) o.x = b.x-r; else if (m === rr) o.x = b.x+b.w+r;
-        else if (m === t) o.y = b.y-r; else o.y = b.y+b.h+r;
-      }
-    }
-  }
-  o.x = clamp(o.x, r, WORLD-r);
-  o.y = clamp(o.y, r, WORLD-r);
-}
-
-function hasLineOfSight(x1, y1, x2, y2) {
-  const d = Math.hypot(x2-x1, y2-y1);
-  const steps = Math.ceil(d/45);
-  for (let i=1;i<steps;i++) {
-    const t = i/steps;
-    if (pointInBuilding(x1+(x2-x1)*t, y1+(y2-y1)*t)) return false;
-  }
-  return true;
-}
-
-/* ================= 粒子 ================= */
-const MAX_PARTICLES = isTouchMode ? 440 : 720;
-function spawnParticle(x, y, ang, spd, color, life, size) {
-  if (particles.length > MAX_PARTICLES) return;
-  particles.push({ x,y, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd, life, maxLife:life, color, size });
-}
-
-/* ================= 敌人 ================= */
-function makeEnemy(x, y, template) {
-  const t = template || pick(mode.enemyTemplates);
-  return {
-    x, y, r:12, hp:t.hp, maxHp:t.hp, angle:0,
-    fireCd: rand(t.fire[0], t.fire[1]),
-    seeTimer: Math.random()*0.2, canSee:false, alert:0,
-    wanderT:0, wx:0, wy:0, hurt:0,
-    speed: rand(t.speed[0], t.speed[1]),
-    template: t, isElite: false
-  };
-}
-
-function spawnEnemy() {
-  for (let t=0;t<100;t++) {
-    const x = rand(160, WORLD-160), y = rand(160, WORLD-160);
-    if (pointInBuilding(x, y)) continue;
-    if (dist(x,y,player.x,player.y) < 780) continue;
-    let e = makeEnemy(x, y);
-    if (level >= 30 && Math.random() < 0.08) {
-      e.isElite = true;
-      e.hp *= rand(5,7); e.maxHp = e.hp; e.speed *= 1.3; e.r = 16;
-    }
-    enemies.push(e);
-    return;
-  }
-}
-
-/* ================= 猎犬 / 冲刺 ================= */
-function addDrone() { player.drones.push({ angle:rand(0,Math.PI*2), dist:48, fireCd:0 }); }
-
-function tryDash() {
-  if (gameOver || pausedForUpgrade || currentMap !== 'city') return;
-  if (player.dashCd > 0) return;
-  let dx = Math.cos(player.angle), dy = Math.sin(player.angle);
-  if (moveStick.active) {
-    const m = Math.hypot(moveStick.dx, moveStick.dy);
-    if (m > 0.15) { dx = moveStick.dx/m; dy = moveStick.dy/m; }
-  } else if (!isTouchMode) {
-    let ax=0, ay=0;
-    if (keys['KeyW']||keys['ArrowUp']) ay -= 1;
-    if (keys['KeyS']||keys['ArrowDown']) ay += 1;
-    if (keys['KeyA']||keys['ArrowLeft']) ax -= 1;
-    if (keys['KeyD']||keys['ArrowRight']) ax += 1;
-    const l = Math.hypot(ax,ay);
-    if (l > 0) { dx = ax/l; dy = ay/l; }
-  }
-  player.vx = dx*1250; player.vy = dy*1250;
-  player.dashTime = 0.16; player.dashCd = player.dashMaxCd;
-  shake = Math.max(shake, 4);
-  for (let i=0;i<10;i++) spawnParticle(player.x, player.y, Math.atan2(-dy,-dx)+rand(-0.7,0.7), rand(60,240), '160,170,190', rand(0.15,0.35), rand(2,4));
-}
-
-/* ================= 战斗 ================= */
-function playerShoot() {
-  const a = player.angle + rand(-0.03,0.03);
-  const sp = 1600;
-  bullets.push({
-    x: player.x+Math.cos(a)*20, y: player.y+Math.sin(a)*20,
-    vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
-    life:0.9, dmg:player.bulletDmg, friendly:true, pierceLeft:player.pierce
-  });
-  player.ammo--;
-  player.fireCd = player.fireRate;
-  player.vx -= Math.cos(player.angle)*58;
-  player.vy -= Math.sin(player.angle)*58;
-  shake = Math.max(shake, 2.3);
-  const mx = player.x+Math.cos(a)*22, my = player.y+Math.sin(a)*22;
-  for (let i=0;i<4;i++) spawnParticle(mx,my,a+rand(-0.55,0.55),rand(120,340),'255,205,120',rand(0.06,0.14),rand(2,4));
-  spawnParticle(player.x,player.y,a+Math.PI/2+rand(-0.3,0.3),rand(120,200),'210,170,90',0.4,2);
-  sfxShot(0.13, 1);
-}
-
-function enemyShoot(e) {
-  const base = Math.atan2(player.y-e.y, player.x-e.x);
-  const a = base + rand(-0.13,0.13);
-  const sp = e.isElite ? 950 : 830;
-  bullets.push({
-    x: e.x+Math.cos(a)*18, y: e.y+Math.sin(a)*18,
-    vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
-    life:1.7, dmg: e.isElite ? e.template.dmg*2 : e.template.dmg, friendly:false
-  });
-  for (let i=0;i<3;i++) spawnParticle(e.x+Math.cos(a)*20, e.y+Math.sin(a)*20, a+rand(-0.4,0.4), rand(80,220), e.isElite?'255,180,80':'255,195,95', 0.11, 3);
-  sfxShot(0.05, e.isElite?0.7:0.82);
-}
-
-function damageEnemy(e, dmg, dirX, dirY) {
-  if (e.dead) return;
-  e.hp -= dmg;
-  e.hurt = 0.12; e.alert = 3;
-  e.x += dirX*9; e.y += dirY*9;
-  for (let i=0;i<5;i++) spawnParticle(e.x,e.y,Math.atan2(dirY,dirX)+rand(-0.9,0.9),rand(90,320), e.isElite?'255,200,80':'190,30,30', rand(0.15,0.4), rand(2,4));
-  sfxHit(0.05);
-
-  if (e.hp <= 0) {
-    e.dead = true;
-    kills++; combo++; comboTimer = 2.2;
-    shake = Math.max(shake, e.isElite?14:7);
-    gainXP(e.isElite?12:3);
-    money += e.isElite?20:5;
-    const n = e.isElite?30:18;
-    for (let i=0;i<n;i++) spawnParticle(e.x,e.y,rand(0,Math.PI*2),rand(60,420), i%3?(e.isElite?'220,180,60':'160,25,25'):'90,15,15', rand(0.2,0.7), rand(2,5));
-    addDecal(e.x, e.y, rand(14,26));
-    if (e.isElite) {
-      shake = 22;
-      for (let i=0;i<3;i++) bullets.push({ x:e.x, y:e.y, vx:Math.cos(i*2.09)*400, vy:Math.sin(i*2.09)*400, life:0.5, dmg:0, friendly:false, isExplosion:true });
-    }
-    if (Math.random() < 0.22) pickups.push({ x:e.x, y:e.y, type:'hp', t:0 });
-    else if (Math.random() < 0.18) pickups.push({ x:e.x, y:e.y, type:'ammo', t:0 });
-  }
-}
-
-function addDecal(x, y, r) {
-  if (decals.length > 220) decals.shift();
-  decals.push({ x, y, r, a:rand(0.25,0.45), rot:rand(0,Math.PI*2) });
-}
-
-/* ================= 升级 ================= */
-function gainXP(n) {
-  xp += n;
-  while (xp >= xpNext) { xp -= xpNext; level++; xpNext = Math.floor(xpNext*1.35+4); triggerUpgrade(); }
-}
-
-function triggerUpgrade() {
-  pausedForUpgrade = true;
-  const shuffled = [...upgradePool].sort(() => Math.random()-0.5);
-  upgradeUI = { choices: shuffled.slice(0,3) };
-}
-
-function selectUpgrade(index) {
-  if (!upgradeUI || !upgradeUI.choices[index]) return;
-  upgradeUI.choices[index].apply();
-  upgradeUI = null;
-  pausedForUpgrade = false;
-}
-
-function getUpgradeLayout() {
-  const cw = Math.min(560, W-36), ch = Math.min(380, H-60);
-  const cx = (W-cw)/2, cy = (H-ch)/2;
-  const pad = 22, bw = cw-pad*2;
-  const headerH = 78, gap = 12;
-  const bh = Math.min(70, (ch-headerH-pad-gap*2)/3);
-  const bx = cx+pad, startY = cy+headerH;
-  const rects = [];
-  for (let i=0;i<3;i++) rects.push({ x:bx, y:startY+i*(bh+gap), w:bw, h:bh });
-  return { cx, cy, cw, ch, rects, bh };
-}
-
-/* ================= 自动瞄准 ================= */
-function updateAutoTarget(dt) {
-  autoTargetTimer -= dt;
-  if (autoTargetTimer <= 0) {
-    autoTargetTimer = 0.12;
-    autoTarget = null;
-    const candidates = [];
-    for (let i=0;i<enemies.length;i++) {
-      const e = enemies[i];
-      if (e.dead) continue;
-      const d = dist(player.x, player.y, e.x, e.y);
-      if (d < 560) candidates.push({ e, d });
-    }
-    candidates.sort((a,b) => a.d-b.d);
-    for (const c of candidates) {
-      if (hasLineOfSight(player.x, player.y, c.e.x, c.e.y)) { autoTarget = c.e; break; }
-    }
-  }
-  if (autoTarget && autoTarget.dead) autoTarget = null;
-  return autoTarget;
-}
-
-/* ================= 盟友更新 ================= */
-function updateAlly(a, dt) {
-  if (a.dead) return;
-  a.hurt -= dt; a.attackCd -= dt; a.punchT -= dt;
-  let target = null, nd = 430;
-  for (const e of enemies) {
-    if (e.dead) continue;
-    const d = dist(a.x, a.y, e.x, e.y);
-    if (d < nd) { nd = d; target = e; }
-  }
-  let tx = a.x, ty = a.y;
-  if (target) {
-    a.angle = Math.atan2(target.y-a.y, target.x-a.x);
-    const reach = a.r + target.r + 6;
-    if (nd > reach) { tx = target.x; ty = target.y; }
-    else if (a.attackCd <= 0) {
-      a.attackCd = 0.55; a.punchT = 0.12;
-      const len = nd || 1;
-      damageEnemy(target, 16, (target.x-a.x)/len, (target.y-a.y)/len);
-      for (let i=0;i<8;i++) spawnParticle(a.x+Math.cos(a.angle)*10, a.y+Math.sin(a.angle)*10, a.angle+rand(-0.7,0.7), rand(120,320), '255,200,120', rand(0.1,0.25), rand(2,4));
-      sfxHit(0.06); shake = Math.max(shake, 2.5);
-    }
-  } else {
-    const d = dist(a.x, a.y, player.x, player.y);
-    if (d > 75) { tx = player.x; ty = player.y; a.angle = Math.atan2(player.y-a.y, player.x-a.x); }
-    else { a.angle += dt*0.4; tx = player.x + Math.cos(a.angle)*60; ty = player.y + Math.sin(a.angle)*60; }
-  }
-  const dx = tx-a.x, dy = ty-a.y;
-  const dl = Math.hypot(dx,dy);
-  if (dl > 2) {
-    const spd = a.speed*dt;
-    a.x += (dx/dl)*Math.min(spd,dl); a.y += (dy/dl)*Math.min(spd,dl);
-  }
-  pushOut(a, a.r);
-  for (let i=0;i<allies.length;i++) {
-    const b = allies[i];
-    if (b === a || b.dead) continue;
-    const ddx = b.x-a.x, ddy = b.y-a.y;
-    const dd = Math.hypot(ddx,ddy);
-    const min = a.r+b.r;
-    if (dd < min && dd > 0.01) {
-      const p = (min-dd)/2;
-      a.x -= (ddx/dd)*p; a.y -= (ddy/dd)*p;
-    }
-  }
-}
-
-/* ================= 玩家更新 ================= */
-function updatePlayer(dt) {
-  let ax = 0, ay = 0;
-  if (isTouchMode) {
-    if (moveStick.active) {
-      const m = Math.hypot(moveStick.dx, moveStick.dy);
-      if (m > 0.12) { ax = moveStick.dx; ay = moveStick.dy; }
-    }
-  } else {
-    if (keys['KeyW']||keys['ArrowUp']) ay -= 1;
-    if (keys['KeyS']||keys['ArrowDown']) ay += 1;
-    if (keys['KeyA']||keys['ArrowLeft']) ax -= 1;
-    if (keys['KeyD']||keys['ArrowRight']) ax += 1;
-    const l = Math.hypot(ax,ay);
-    if (l > 0) { ax /= l; ay /= l; }
-    if (keys['ShiftLeft']||keys['ShiftRight']) tryDash();
-  }
-  player.dashCd -= dt; player.dashTime -= dt;
-  player.vx += ax*3000*dt; player.vy += ay*3000*dt;
-  const fr = Math.pow(0.0009, dt);
-  player.vx *= fr; player.vy *= fr;
-  const sp = Math.hypot(player.vx, player.vy);
-  const maxS = player.dashTime > 0 ? 1000 : player.moveSpeed;
-  if (sp > maxS) { player.vx = (player.vx/sp)*maxS; player.vy = (player.vy/sp)*maxS; }
-  player.x += player.vx*dt; player.y += player.vy*dt;
-  pushOut(player, player.r);
-
-  const target = updateAutoTarget(dt);
-  let aimInput = false, wantFire = false;
-  if (isTouchMode) {
-    if (aimStick.active) {
-      const m = Math.hypot(aimStick.dx, aimStick.dy);
-      if (m > 0.22) { player.angle = Math.atan2(aimStick.dy, aimStick.dx); aimInput = true; }
-    }
-    if (!aimInput && target) player.angle = Math.atan2(target.y-player.y, target.x-player.x);
-    wantFire = aimInput || !!target;
-  } else {
-    const mwx = cam.x + (mouse.x-W/2), mwy = cam.y + (mouse.y-H/2);
-    player.angle = Math.atan2(mwy-player.y, mwx-player.x);
-    wantFire = mouse.down;
-  }
-
-  player.fireCd -= dt; player.reloadT -= dt; player.hurtCd -= dt;
-  if (player.reloadT <= 0 && player.ammo <= 0) player.reloadT = player.reloadTime;
-  if (player.reloadT <= 0 && player.reloadT+dt > 0 && player.ammo <= 0) player.ammo = player.mag;
-  if (wantFire && player.fireCd <= 0 && player.ammo > 0 && player.reloadT <= 0 && !gameOver && !pausedForUpgrade) playerShoot();
-  if (!isTouchMode && keys['KeyR'] && player.ammo < player.mag && player.reloadT <= 0) { player.reloadT = player.reloadTime; player.ammo = 0; }
-
-  player.droneAngle += dt*2.2;
-  for (let i=0;i<player.drones.length;i++) {
-    const d = player.drones[i];
-    const a = player.droneAngle + (i*Math.PI*2)/player.drones.length;
-    const dx = player.x+Math.cos(a)*d.dist, dy = player.y+Math.sin(a)*d.dist;
-    d.fireCd -= dt;
-    if (d.fireCd <= 0) {
-      d.fireCd = 0.55;
-      let nearest = null, nd = 500;
-      for (const e of enemies) {
-        if (e.dead) continue;
-        const dd = dist(dx,dy,e.x,e.y);
-        if (dd < nd && hasLineOfSight(dx,dy,e.x,e.y)) { nd = dd; nearest = e; }
-      }
-      if (nearest) {
-        const a2 = Math.atan2(nearest.y-dy, nearest.x-dx);
-        bullets.push({ x:dx, y:dy, vx:Math.cos(a2)*1200, vy:Math.sin(a2)*1200, life:0.7, dmg:player.bulletDmg*0.6, friendly:true });
-      }
-    }
-  }
-
-  for (let i=pickups.length-1;i>=0;i--) {
-    const p = pickups[i];
-    p.t += dt;
-    if (dist(p.x, p.y, player.x, player.y) < player.pickupRange+6) {
-      if (p.type === 'hp') {
-        player.hp = Math.min(player.maxHp, player.hp+30);
-        for (let k=0;k<10;k++) spawnParticle(p.x,p.y,rand(0,Math.PI*2),rand(40,180),'90,220,140',rand(0.2,0.45),3);
-      } else if (p.type === 'ammo') {
-        player.ammo = player.mag; player.reloadT = 0;
-        for (let k=0;k<10;k++) spawnParticle(p.x,p.y,rand(0,Math.PI*2),rand(40,180),'230,200,90',rand(0.2,0.45),3);
-      } else if (p.type === 'ally') {
-        if (!addAlly(p.x, p.y)) { player.ammo = player.mag; player.reloadT = 0; }
-      }
-      pickups.splice(i, 1);
-    }
-  }
-}
-
-/* ================= 敌人更新 ================= */
-function updateEnemy(e, dt) {
-  const d = dist(e.x, e.y, player.x, player.y);
-  e.seeTimer -= dt;
-  if (e.seeTimer <= 0) {
-    e.seeTimer = 0.2;
-    e.canSee = d < 820 && hasLineOfSight(e.x, e.y, player.x, player.y);
-  }
-  if (e.canSee) { e.alert = 3; e.angle = Math.atan2(player.y-e.y, player.x-e.x); }
-  e.alert -= dt;
-
-  let allyNear = null, ad = 220;
-  for (const a of allies) {
-    if (a.dead) continue;
-    const dd = dist(e.x, e.y, a.x, a.y);
-    if (dd < ad) { ad = dd; allyNear = a; }
-  }
-
-  let mvx = 0, mvy = 0;
-  if (allyNear && ad < 160) {
-    const nx = (allyNear.x-e.x)/(ad||1), ny = (allyNear.y-e.y)/(ad||1);
-    mvx = -nx; mvy = -ny;
-    e.angle = Math.atan2(allyNear.y-e.y, allyNear.x-e.x);
-    e.fireCd -= dt;
-    if (e.fireCd <= 0 && !gameOver) { e.fireCd = rand(0.9,1.8); enemyShootAt(e, allyNear.x, allyNear.y); }
-  } else if (e.alert > 0 && !gameOver) {
-    const nx = (player.x-e.x)/(d||1), ny = (player.y-e.y)/(d||1);
-    if (d > (e.isElite?300:250)) { mvx = nx; mvy = ny; }
-    else if (d < (e.isElite?200:160)) { mvx = -nx; mvy = -ny; }
-    const s = Math.sin(time*2.2 + e.x*0.011);
-    mvx += -ny*0.55*s; mvy += nx*0.55*s;
-    e.fireCd -= dt;
-    if (e.fireCd <= 0 && e.canSee && d < e.template.range) {
-      e.fireCd = e.isElite ? rand(0.5,1.0) : rand(e.template.fire[0], e.template.fire[1]);
-      enemyShoot(e);
-    }
-  } else {
-    e.wanderT -= dt;
-    if (e.wanderT <= 0) { e.wanderT = rand(1.4,4); const a = rand(0,Math.PI*2); e.wx = Math.cos(a); e.wy = Math.sin(a); }
-    mvx = e.wx*0.45; mvy = e.wy*0.45;
-    e.angle = Math.atan2(e.wy, e.wx);
-  }
-  const ml = Math.hypot(mvx, mvy);
-  if (ml > 0.01) { mvx /= ml; mvy /= ml; }
-  e.x += mvx*e.speed*dt; e.y += mvy*e.speed*dt;
-  pushOut(e, e.r);
-  if (e.hurt > 0) e.hurt -= dt;
-}
-
-function enemyShootAt(e, tx, ty) {
-  const base = Math.atan2(ty-e.y, tx-e.x);
-  const a = base + rand(-0.12,0.12);
-  const sp = e.isElite ? 900 : 800;
-  bullets.push({ x:e.x+Math.cos(a)*18, y:e.y+Math.sin(a)*18, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1.6, dmg: e.isElite?e.template.dmg*1.6:e.template.dmg, friendly:false });
-  sfxShot(0.04, 0.8);
-}
-
-/* ================= 子弹更新 ================= */
-function updateBullets(dt) {
-  for (let i=bullets.length-1;i>=0;i--) {
-    const b = bullets[i];
-    b.life -= dt;
-    if (b.life <= 0) { bullets.splice(i, 1); continue; }
-    const steps = 2;
-    let removed = false;
-    for (let s=0;s<steps;s++) {
-      b.x += (b.vx*dt)/steps; b.y += (b.vy*dt)/steps;
-      if (b.x < 0 || b.y < 0 || b.x > WORLD || b.y > WORLD) { bullets.splice(i, 1); removed = true; break; }
-      if (pointInBuilding(b.x, b.y)) {
-        for (let k=0;k<4;k++) spawnParticle(b.x,b.y,Math.atan2(-b.vy,-b.vx)+rand(-1.1,1.1),rand(60,260),'255,220,150',rand(0.08,0.22),rand(1.5,3));
-        bullets.splice(i, 1); removed = true; break;
-      }
-      if (b.friendly) {
-        for (let j=0;j<enemies.length;j++) {
-          const e = enemies[j];
-          if (e.dead) continue;
-          if (dist(b.x,b.y,e.x,e.y) < e.r+4) {
-            const len = Math.hypot(b.vx,b.vy) || 1;
-            damageEnemy(e, b.dmg, b.vx/len, b.vy/len);
-            if (b.pierceLeft > 0) b.pierceLeft--;
-            else { bullets.splice(i, 1); removed = true; }
-            break;
-          }
-        }
-      } else {
-        let blocked = false;
-        for (let k=0;k<allies.length;k++) {
-          const a = allies[k];
-          if (a.dead) continue;
-          if (dist(b.x,b.y,a.x,a.y) < a.r+5) {
-            a.hp -= b.dmg; a.hurt = 0.18;
-            shake = Math.max(shake, 3.5);
-            for (let p=0;p<7;p++) spawnParticle(b.x,b.y,rand(0,Math.PI*2),rand(60,240),'210,170,110',rand(0.12,0.32),rand(2,4));
-            sfxHit(0.07);
-            if (a.hp <= 0) {
-              a.dead = true; a.hp = 0;
-              for (let p=0;p<20;p++) spawnParticle(a.x,a.y,rand(0,Math.PI*2),rand(40,300), p%2?'120,80,50':'80,50,30', rand(0.3,0.8), rand(2,5));
-              addDecal(a.x, a.y, rand(12,22));
-              shake = Math.max(shake, 8);
-            }
-            bullets.splice(i, 1); removed = true; blocked = true; break;
-          }
-        }
-        if (blocked) break;
-
-        if (player.hp > 0 && dist(b.x,b.y,player.x,player.y) < player.r+4) {
-          player.hp -= b.dmg;
-          hitFlash = Math.min(1, hitFlash+0.7);
-          shake = Math.max(shake, 6);
-          for (let k=0;k<8;k++) spawnParticle(b.x,b.y,rand(0,Math.PI*2),rand(60,260),'190,30,30',rand(0.15,0.4),rand(2,4));
-          addDecal(player.x+rand(-8,8), player.y+rand(-8,8), rand(10,18));
-          sfxHit(0.1);
-          bullets.splice(i, 1); removed = true;
-          if (player.hp <= 0 && !gameOver) {
-            player.hp = 0; gameOver = true; shake = 22;
-            resetSticks();
-            for (let k=0;k<40;k++) spawnParticle(player.x,player.y,rand(0,Math.PI*2),rand(50,480), k%2?'170,25,25':'60,10,10', rand(0.3,1.0), rand(2,6));
-          }
-          break;
-        }
-      }
-      if (removed) break;
-    }
-  }
-}
-
-/* ================= 粒子更新 ================= */
-function updateParticles(dt) {
-  for (let i=particles.length-1;i>=0;i--) {
-    const p = particles[i];
-    p.life -= dt;
-    if (p.life <= 0) { particles.splice(i, 1); continue; }
-    p.x += p.vx*dt; p.y += p.vy*dt;
-    p.vx *= Math.pow(0.02, dt); p.vy *= Math.pow(0.02, dt);
-  }
-}
-
-/* ================= 主城更新 ================= */
-function updateCity(dt) {
-  if (pausedForUpgrade) return;
-  time += dt;
-  if (!gameOver) updatePlayer(dt);
-  else { player.vx *= Math.pow(0.01, dt); player.vy *= Math.pow(0.01, dt); }
-
-  for (let i=0;i<allies.length;i++) updateAlly(allies[i], dt);
-  for (let i=allies.length-1;i>=0;i--) if (allies[i].dead) allies.splice(i, 1);
-
-  for (let i=0;i<enemies.length;i++) updateEnemy(enemies[i], dt);
-
-  for (let i=0;i<enemies.length;i++) for (let j=i+1;j<enemies.length;j++) {
-    const a = enemies[i], b = enemies[j];
-    if (a.dead || b.dead) continue;
-    const dx = b.x-a.x, dy = b.y-a.y;
-    const d = Math.hypot(dx, dy);
-    const min = a.r+b.r;
-    if (d < min && d > 0.01) {
-      const p = (min-d)/2;
-      const nx = dx/d, ny = dy/d;
-      a.x -= nx*p; a.y -= ny*p; b.x += nx*p; b.y += ny*p;
-    }
-  }
-
-  for (let i=enemies.length-1;i>=0;i--) if (enemies[i].dead) enemies.splice(i, 1);
-
-  updateBullets(dt);
-  updateParticles(dt);
-
-  if (!gameOver) {
-    respawnTimer -= dt;
-    const cap = isTouchMode ? 34 : 55;
-    const maxEnemies = Math.min(20 + Math.floor(level/2), cap);
-    if (respawnTimer <= 0 && enemies.length < maxEnemies) {
-      respawnTimer = Math.max(0.6, 1.6 - level*0.02);
-      spawnEnemy();
-    }
-    supplyTimer -= dt;
-    if (supplyTimer <= 0) { supplyTimer = rand(9,16); spawnSupply(); }
-  }
-
-  if (comboTimer > 0) { comboTimer -= dt; if (comboTimer <= 0) combo = 0; }
-
-  const leadX = isTouchMode ? 0 : (mouse.x-W/2)*0.12;
-  const leadY = isTouchMode ? 0 : (mouse.y-H/2)*0.12;
-  const targetX = player.x + leadX, targetY = player.y + leadY;
-  cam.x += (targetX-cam.x)*Math.min(1, 9*dt);
-  cam.y += (targetY-cam.y)*Math.min(1, 9*dt);
-
-  shake *= Math.pow(0.0015, dt);
-  if (shake < 0.05) shake = 0;
-  hitFlash *= Math.pow(0.02, dt);
-  if (hitFlash < 0.01) hitFlash = 0;
-}
-
-function spawnSupply() {
-  for (let t=0;t<50;t++) {
-    const ang = rand(0,Math.PI*2), d = rand(200,620);
-    const x = player.x+Math.cos(ang)*d, y = player.y+Math.sin(ang)*d;
-    if (x < 120 || y < 120 || x > WORLD-120 || y > WORLD-120) continue;
-    if (pointInBuilding(x, y)) continue;
-    let type;
-    const r = Math.random();
-    if (allies.length < MAX_ALLIES && r < 0.30) type = 'ally';
-    else if (r < 0.65) type = 'hp';
-    else type = 'ammo';
-    pickups.push({ x, y, type, t:0, supply:true });
-    for (let i=0;i<10;i++) spawnParticle(x,y,rand(0,Math.PI*2),rand(30,160),'212,175,55',rand(0.3,0.6),rand(1.5,3));
-    return;
-  }
-}
-
-/* ================= 副地图更新 ================= */
-function updateSubMap(mapState, dt) {
-  time += dt;
-  updateSubMapAllies(mapState, dt);
-  updateParticles(dt);
-}
-
-/* ================= 主更新 ================= */
-function update(dt) {
-  updateTransports(dt);
-  if (currentMap === 'city') updateCity(dt);
-  else if (currentMap === 'farm') updateSubMap(farm, dt);
-  else if (currentMap === 'mine') updateSubMap(mine, dt);
-}
-
-/* ================= 名牌 ================= */
-function drawNameLabel(text, x, y, color, size) {
-  ctx.font = 'bold '+size+'px "Courier New", "Microsoft YaHei", sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  ctx.lineJoin = 'round'; ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(0,0,0,0.78)';
-  ctx.strokeText(text, x, y);
-  ctx.fillStyle = color;
-  ctx.fillText(text, x, y);
-}
-
-/* ================= 开始页面绘制 ================= */
-function renderStartScreen() {
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.fillStyle = '#0d0b08';
-  ctx.fillRect(0, 0, W, H);
-
-  // 装饰金线
-  const titleY = Math.max(60, H*0.13);
-  ctx.strokeStyle = 'rgba(212,175,55,0.25)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(W*0.15, titleY+45); ctx.lineTo(W*0.85, titleY+45);
-  ctx.stroke();
-
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(212,175,55,0.98)';
-  const titleSize = Math.min(40, W*0.10);
-  ctx.font = 'bold '+titleSize+'px "Courier New", monospace';
-  ctx.fillText('暗 巷', W/2, titleY);
-
-  ctx.font = 'bold '+(titleSize*0.4)+'px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(212,175,55,0.6)';
-  ctx.fillText('三 部 曲', W/2, titleY+titleSize*0.9);
-
-  const L = getStartLayout();
-  for (let i=0;i<L.cards.length;i++) {
-    const c = L.cards[i];
-    const m = c.mode;
-
-    ctx.fillStyle = 'rgba(20,15,10,0.82)';
-    ctx.fillRect(c.x, c.y, c.w, c.h);
-    ctx.strokeStyle = 'rgba(212,175,55,0.45)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(c.x+0.5, c.y+0.5, c.w-1, c.h-1);
-    ctx.strokeStyle = 'rgba(212,175,55,0.15)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(c.x+5, c.y+5, c.w-10, c.h-10);
-
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-
-    ctx.fillStyle = 'rgba(255,230,180,0.98)';
-    ctx.font = 'bold '+Math.min(19, c.w*0.06)+'px "Courier New", monospace';
-    ctx.fillText(m.title + ' · ' + m.year, c.x+20, c.y+c.h*0.28);
-
-    ctx.fillStyle = 'rgba(212,175,55,0.85)';
-    ctx.font = 'bold '+Math.min(13, c.w*0.04)+'px "Courier New", monospace';
-    ctx.fillText(m.subtitle, c.x+20, c.y+c.h*0.53);
-
-    ctx.fillStyle = 'rgba(200,190,170,0.6)';
-    ctx.font = Math.min(12, c.w*0.036)+'px "Courier New", monospace';
-    ctx.fillText(m.playerName + ' · ' + m.allyLabel, c.x+20, c.y+c.h*0.78);
-
-    // 右侧加速标记
-    ctx.textAlign = 'right';
-    ctx.fillStyle = 'rgba(212,175,55,0.45)';
-    ctx.font = 'bold '+Math.min(11, c.w*0.034)+'px "Courier New", monospace';
-    let boostLabel = '';
-    if (m.boost.type === 'whip') boostLabel = '鞭打加速';
-    else if (m.boost.type === 'money') boostLabel = '加钱加班';
-    else if (m.boost.type === 'faith') boostLabel = '信仰支持';
-    ctx.fillText(boostLabel, c.x+c.w-20, c.y+c.h*0.28);
-  }
-
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(200,190,170,0.4)';
-  ctx.font = 'bold 11px "Courier New", monospace';
-  ctx.fillText('点击卡片进入对应时代', W/2, H-30);
-}
-
-/* ================= 主城渲染 ================= */
-function renderCity() {
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.fillStyle = '#0d0b08';
-  ctx.fillRect(0, 0, W, H);
-
-  const sx = (Math.random()*2-1)*shake, sy = (Math.random()*2-1)*shake;
-  ctx.save();
-  ctx.translate(W/2-cam.x+sx, H/2-cam.y+sy);
-
-  const vx0 = cam.x-W/2-320, vx1 = cam.x+W/2+320;
-  const vy0 = cam.y-H/2-320, vy1 = cam.y+H/2+320;
-
-  ctx.fillStyle = '#2a231b';
-  ctx.fillRect(vx0, vy0, vx1-vx0, vy1-vy0);
-
-  ctx.fillStyle = '#3a3228';
-  const i0 = Math.max(0, Math.floor(vx0/BLOCK));
-  const i1 = Math.min(GRID_N, Math.ceil(vx1/BLOCK));
-  const j0 = Math.max(0, Math.floor(vy0/BLOCK));
-  const j1 = Math.min(GRID_N, Math.ceil(vy1/BLOCK));
-  for (let i=i0;i<=i1;i++) ctx.fillRect(i*BLOCK-ROAD/2, vy0, ROAD, vy1-vy0);
-  for (let j=j0;j<=j1;j++) ctx.fillRect(vx0, j*BLOCK-ROAD/2, vx1-vx0, ROAD);
-
-  ctx.strokeStyle = 'rgba(160,130,80,0.12)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([22,26]);
-  for (let i=i0;i<=i1;i++) { ctx.beginPath(); ctx.moveTo(i*BLOCK,vy0); ctx.lineTo(i*BLOCK,vy1); ctx.stroke(); }
-  for (let j=j0;j<=j1;j++) { ctx.beginPath(); ctx.moveTo(vx0,j*BLOCK); ctx.lineTo(vx1,j*BLOCK); ctx.stroke(); }
-  ctx.setLineDash([]);
-
-  for (let i=0;i<decals.length;i++) {
-    const d = decals[i];
-    if (d.x < vx0 || d.x > vx1 || d.y < vy0 || d.y > vy1) continue;
-    ctx.fillStyle = 'rgba(70,10,10,'+d.a+')';
-    ctx.beginPath(); ctx.ellipse(d.x,d.y,d.r,d.r*0.72,d.rot,0,Math.PI*2); ctx.fill();
-  }
-
-  for (let i=0;i<buildings.length;i++) {
-    const b = buildings[i];
-    if (b.x+b.w < vx0 || b.x > vx1 || b.y+b.h < vy0 || b.y > vy1) continue;
-    ctx.fillStyle = 'rgba(0,0,0,0.42)';
-    ctx.fillRect(b.x+9, b.y+12, b.w, b.h);
-    ctx.fillStyle = b.col;
-    ctx.fillRect(b.x, b.y, b.w, b.h);
-    ctx.fillStyle = 'rgba(140,100,60,0.22)';
-    ctx.fillRect(b.x, b.y, b.w, 4);
-    ctx.fillStyle = 'rgba(140,100,60,0.10)';
-    ctx.fillRect(b.x, b.y, 4, b.h);
-    for (let k=0;k<b.details.length;k++) {
-      const d = b.details[k];
-      if (d.t === 'vent') { ctx.fillStyle = 'rgba(0,0,0,0.32)'; ctx.fillRect(d.x,d.y,d.w,d.h); ctx.fillStyle = 'rgba(200,160,100,0.08)'; ctx.fillRect(d.x,d.y,d.w,2); }
-      else { ctx.fillStyle = 'rgba(180,200,220,0.10)'; ctx.fillRect(d.x,d.y,d.w,d.h); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1; ctx.strokeRect(d.x+0.5,d.y+0.5,d.w-1,d.h-1); }
-    }
-    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 2;
-    ctx.strokeRect(b.x+1, b.y+1, b.w-2, b.h-2);
-  }
-
-  ctx.globalCompositeOperation = 'lighter';
-  for (let i=0;i<lamps.length;i++) {
-    const l = lamps[i];
-    if (l.x < vx0-200 || l.x > vx1+200 || l.y < vy0-200 || l.y > vy1+200) continue;
-    ctx.drawImage(glowCanvas, l.x-150, l.y-150, 300, 300);
-  }
-  ctx.globalCompositeOperation = 'source-over';
-  for (let i=0;i<lamps.length;i++) {
-    const l = lamps[i];
-    if (l.x < vx0-60 || l.x > vx1+60 || l.y < vy0-60 || l.y > vy1+60) continue;
-    ctx.fillStyle = 'rgba(255,210,140,0.85)';
-    ctx.beginPath(); ctx.arc(l.x, l.y, 3, 0, Math.PI*2); ctx.fill();
-  }
-
-  for (let i=0;i<pickups.length;i++) {
-    const p = pickups[i];
-    const bob = Math.sin(p.t*4)*3;
-    ctx.save(); ctx.translate(p.x, p.y+bob);
-    if (p.supply) { ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fillStyle = 'rgba(212,175,55,0.10)'; ctx.fill(); ctx.strokeStyle = 'rgba(212,175,55,0.25)'; ctx.lineWidth = 1; ctx.stroke(); }
-    if (p.type === 'hp') {
-      ctx.fillStyle = 'rgba(60,200,130,0.95)'; ctx.beginPath(); ctx.arc(0,0,9,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(15,20,15,0.9)'; ctx.fillRect(-5.5,-1.8,11,3.6); ctx.fillRect(-1.8,-5.5,3.6,11);
-    } else if (p.type === 'ammo') {
-      ctx.fillStyle = 'rgba(230,200,80,0.95)'; ctx.beginPath(); ctx.arc(0,0,9,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(15,15,10,0.9)'; ctx.fillRect(-5.5,-4,11,3); ctx.fillRect(-5.5,1,11,3);
-    } else if (p.type === 'ally') {
-      ctx.fillStyle = 'rgba(212,175,55,0.95)'; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = 'rgba(30,20,10,0.95)'; ctx.beginPath(); ctx.arc(0,-3,3.2,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0,5,4.5,3.2,0,0,Math.PI*2); ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  for (let i=0;i<enemies.length;i++) {
-    const e = enemies[i];
-    if (e.x < vx0 || e.x > vx1 || e.y < vy0 || e.y > vy1) continue;
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.beginPath(); ctx.ellipse(e.x+3, e.y+5, e.r*1.05, e.r*0.8, 0, 0, Math.PI*2); ctx.fill();
-    if (e.isElite) {
-      const pulse = 1 + Math.sin(time*6+e.x)*0.15;
-      ctx.strokeStyle = 'rgba(255,200,60,'+(0.5+Math.sin(time*6)*0.3).toFixed(2)+')';
-      ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.x,e.y,e.r*1.8*pulse,0,Math.PI*2); ctx.stroke();
-    }
-    ctx.fillStyle = e.hurt > 0 ? '#ff6a5a' : e.template.color;
-    ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = e.isElite ? 'rgba(212,175,55,0.9)' : 'rgba(0,0,0,0.6)';
-    ctx.lineWidth = e.isElite ? 3 : 2; ctx.stroke();
-    ctx.strokeStyle = e.isElite ? '#d4af37' : '#221a16'; ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(e.x+Math.cos(e.angle)*6, e.y+Math.sin(e.angle)*6);
-    ctx.lineTo(e.x+Math.cos(e.angle)*20, e.y+Math.sin(e.angle)*20); ctx.stroke();
-    if (e.hp < e.maxHp) {
-      const bw = 30;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(e.x-bw/2, e.y-e.r-12, bw, 4);
-      ctx.fillStyle = e.isElite ? '#d4af37' : '#d94141'; ctx.fillRect(e.x-bw/2, e.y-e.r-12, bw*(e.hp/e.maxHp), 4);
-    }
-    const label = e.isElite ? '★ '+e.template.name : e.template.name;
-    drawNameLabel(label, e.x, e.y-e.r-(e.hp<e.maxHp?18:14), e.isElite?'rgba(255,220,120,0.95)':'rgba(215,200,190,0.78)', e.isElite?11:9.5);
-  }
-
-  ctx.lineCap = 'round';
-  for (let i=0;i<bullets.length;i++) {
-    const b = bullets[i];
-    const len = 0.022;
-    ctx.strokeStyle = b.friendly ? 'rgba(255,235,170,0.95)' : 'rgba(255,140,90,0.95)';
-    ctx.lineWidth = b.friendly ? 3 : 2.5;
-    ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x-b.vx*len, b.y-b.vy*len); ctx.stroke();
-  }
-  ctx.lineCap = 'butt';
-
-  for (let i=0;i<player.drones.length;i++) {
-    const d = player.drones[i];
-    const a = player.droneAngle + (i*Math.PI*2)/player.drones.length;
-    const dx = player.x+Math.cos(a)*d.dist, dy = player.y+Math.sin(a)*d.dist;
-    ctx.fillStyle = 'rgba(212,175,55,0.9)'; ctx.beginPath(); ctx.arc(dx,dy,5,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,220,120,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
-  }
-
-  for (let i=0;i<allies.length;i++) {
-    const a = allies[i];
-    if (a.x < vx0 || a.x > vx1 || a.y < vy0 || a.y > vy1) continue;
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.beginPath(); ctx.ellipse(a.x+3,a.y+5,a.r*1.05,a.r*0.8,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = a.hurt > 0 ? '#c98a5a' : '#5a3d28';
-    ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(212,175,55,0.75)'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = '#d4af37';
-    ctx.beginPath(); ctx.arc(a.x, a.y-2, a.r*0.5, Math.PI, 0); ctx.fill();
-    ctx.fillRect(a.x-a.r*0.75, a.y-4, a.r*1.5, 3);
-    const punchOffset = a.punchT > 0 ? 16 : 8;
-    ctx.fillStyle = '#7a5236';
-    ctx.beginPath(); ctx.arc(a.x+Math.cos(a.angle)*punchOffset, a.y+Math.sin(a.angle)*punchOffset, 4.5, 0, Math.PI*2); ctx.fill();
-    const bw = 26;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(a.x-bw/2, a.y-a.r-12, bw, 3.5);
-    ctx.fillStyle = '#d4af37'; ctx.fillRect(a.x-bw/2, a.y-a.r-12, bw*clamp(a.hp/a.maxHp,0,1), 3.5);
-    drawNameLabel(a.name, a.x, a.y-a.r-17, 'rgba(140,230,160,0.92)', 9.5);
-  }
-
-  if (player.hp > 0 || gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath(); ctx.ellipse(player.x+3, player.y+5, player.r*1.1, player.r*0.85, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#3a2e22';
-    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = 'rgba(212,175,55,0.15)';
-    ctx.beginPath(); ctx.arc(player.x-2, player.y-2, player.r*0.62, 0, Math.PI*2); ctx.fill();
-    const ga = player.angle;
-    ctx.strokeStyle = '#1b1b1f'; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(player.x+Math.cos(ga)*7, player.y+Math.sin(ga)*7);
-    ctx.lineTo(player.x+Math.cos(ga)*22, player.y+Math.sin(ga)*22); ctx.stroke();
-    ctx.fillStyle = '#4a4a52';
-    ctx.beginPath(); ctx.arc(player.x+Math.cos(ga)*22, player.y+Math.sin(ga)*22, 2.6, 0, Math.PI*2); ctx.fill();
-    drawNameLabel(player.name, player.x, player.y-player.r-10, 'rgba(255,220,130,0.98)', 11.5);
-  }
-
-  for (let i=0;i<particles.length;i++) {
-    const p = particles[i];
-    const a = Math.max(0, p.life/p.maxLife);
-    ctx.fillStyle = 'rgba('+p.color+','+a.toFixed(3)+')';
-    const s = p.size*(0.4+a*0.6);
-    ctx.fillRect(p.x-s/2, p.y-s/2, s, s);
-  }
-
-  ctx.restore();
-
-  if (vignette) { ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H); }
-  if (hitFlash > 0.01) { ctx.fillStyle = 'rgba(180,20,20,'+(hitFlash*0.35).toFixed(3)+')'; ctx.fillRect(0, 0, W, H); }
-
-  drawCityUI();
-}
-
-/* ================= 副地图渲染 ================= */
-function renderSubMap(mapState, type) {
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const isFarm = type === 'cotton';
-  const cfg = isFarm ? mode.subMaps.farm : mode.subMaps.mine;
-  const mapW = FARM_MAP_W, mapH = FARM_MAP_H;
-
-  ctx.fillStyle = isFarm ? '#1a2a18' : '#141416';
-  ctx.fillRect(0, 0, W, H);
-
-  if (mapState.boostTimer > 0) {
-    const inten = Math.min(1, mapState.boostTimer/3) * 0.10;
-    const bc = mode.boost.color;
-    ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+inten.toFixed(3)+')';
-    ctx.fillRect(0, 0, W, H);
-  }
-  if (mapState.whipFlash > 0) {
-    const bc = mode.boost.color;
-    ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+(mapState.whipFlash*0.5).toFixed(3)+')';
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  const scale = Math.min(W/mapW, H/mapH) * 0.78;
-  const offsetX = (W-mapW*scale)/2, offsetY = (H-mapH*scale)/2 + 20;
-
-  ctx.save();
-  ctx.translate(offsetX, offsetY);
-  ctx.scale(scale, scale);
-
-  ctx.fillStyle = cfg.mapColor;
-  ctx.fillRect(0, 0, mapW, mapH);
-
-  ctx.strokeStyle = isFarm ? 'rgba(60,90,50,0.25)' : 'rgba(70,70,80,0.25)';
-  ctx.lineWidth = 1;
-  const gridStep = 100;
-  for (let gx=0;gx<=mapW;gx+=gridStep) { ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,mapH); ctx.stroke(); }
-  for (let gy=0;gy<=mapH;gy+=gridStep) { ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(mapW,gy); ctx.stroke(); }
-
-  const wx = SUBMAP_CENTER_X, wy = SUBMAP_CENTER_Y;
-  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(wx-60+6, wy-40+8, 120, 80);
-  ctx.fillStyle = '#3a2e22'; ctx.fillRect(wx-60, wy-40, 120, 80);
-  ctx.strokeStyle = 'rgba(212,175,55,0.7)'; ctx.lineWidth = 3; ctx.strokeRect(wx-60, wy-40, 120, 80);
-  ctx.fillStyle = 'rgba(212,175,55,0.12)'; ctx.fillRect(wx-58, wy-38, 116, 76);
-  ctx.fillStyle = 'rgba(212,175,55,0.85)';
-  ctx.font = 'bold 18px "Courier New", monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('仓 库', wx, wy);
-
-  for (const n of mapState.nodes) {
-    if (n.amount <= 0) {
-      ctx.fillStyle = isFarm ? 'rgba(60,80,50,0.4)' : 'rgba(60,60,70,0.4)';
-      ctx.beginPath(); ctx.arc(n.x, n.y, n.r*0.6, 0, Math.PI*2); ctx.fill();
-      continue;
-    }
-    if (isFarm) {
-      ctx.fillStyle = 'rgba(80,120,60,0.6)';
-      ctx.beginPath(); ctx.arc(n.x, n.y+4, n.r+4, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = cfg.nodeFill;
-      for (let k=0;k<4;k++) {
-        const ang = k*Math.PI/2 + 0.4;
-        ctx.beginPath(); ctx.arc(n.x+Math.cos(ang)*7, n.y+Math.sin(ang)*7, 6, 0, Math.PI*2); ctx.fill();
-      }
-      ctx.beginPath(); ctx.arc(n.x, n.y, 7, 0, Math.PI*2); ctx.fill();
-    } else {
-      ctx.fillStyle = 'rgba(120,90,30,0.65)';
-      ctx.beginPath(); ctx.arc(n.x, n.y+4, n.r+4, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = cfg.nodeFill;
-      ctx.beginPath(); ctx.moveTo(n.x, n.y-13); ctx.lineTo(n.x+11, n.y); ctx.lineTo(n.x, n.y+13); ctx.lineTo(n.x-11, n.y); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(255,240,180,0.9)';
-      ctx.beginPath(); ctx.moveTo(n.x, n.y-8); ctx.lineTo(n.x+6, n.y); ctx.lineTo(n.x, n.y+8); ctx.lineTo(n.x-6, n.y); ctx.closePath(); ctx.fill();
-    }
-  }
-
-  const boostActive = mapState.boostTimer > 0;
-  const bc = mode.boost.color;
-
-  for (const a of mapState.allies) {
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.beginPath(); ctx.ellipse(a.x+2, a.y+4, a.r*1.05, a.r*0.8, 0, 0, Math.PI*2); ctx.fill();
-
-    const hpRatio = clamp(a.hp/a.maxHp, 0, 1);
-    let bodyColor = '#5a3d28';
-    if (a.hurtT > 0) bodyColor = 'rgb('+Math.min(180,bc[0]+40)+','+Math.min(80,bc[1])+',30)';
-    else if (hpRatio < 0.35) bodyColor = '#6a2a1a';
-
-    ctx.fillStyle = bodyColor;
-    ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(212,175,55,0.7)'; ctx.lineWidth = 2; ctx.stroke();
-
-    ctx.fillStyle = '#d4af37';
-    ctx.beginPath(); ctx.arc(a.x, a.y-2, a.r*0.5, Math.PI, 0); ctx.fill();
-    ctx.fillRect(a.x-a.r*0.75, a.y-4, a.r*1.5, 3);
-
-    if (boostActive) {
-      const trailDir = a.angle + Math.PI;
-      for (let k=1;k<=3;k++) {
-        ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+(0.25-k*0.07).toFixed(2)+')';
-        ctx.beginPath(); ctx.arc(a.x+Math.cos(trailDir)*k*7, a.y+Math.sin(trailDir)*k*7, a.r*(1-k*0.15), 0, Math.PI*2); ctx.fill();
-      }
-    }
-
-    const bw = 22;
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(a.x-bw/2, a.y-a.r-10, bw, 3);
-    ctx.fillStyle = hpRatio > 0.5 ? '#d4af37' : (hpRatio > 0.25 ? '#e0a040' : '#d94141');
-    ctx.fillRect(a.x-bw/2, a.y-a.r-10, bw*hpRatio, 3);
-
-    if (a.state === 'collecting') {
-      const pulse = 0.5 + Math.sin(time*20)*0.5;
-      ctx.strokeStyle = boostActive ? 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+pulse.toFixed(2)+')' : 'rgba(255,240,180,'+pulse.toFixed(2)+')';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(a.x, a.y, a.r+6, 0, Math.PI*2); ctx.stroke();
-    }
-
-    if (a.hurtT > 0) {
-      ctx.strokeStyle = 'rgba(255,40,20,'+(a.hurtT*2).toFixed(2)+')';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.arc(a.x, a.y, a.r+8, 0, Math.PI*2); ctx.stroke();
-    }
-  }
-
-  ctx.restore();
-
-  if (vignette) { ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H); }
-  drawSubMapUI(mapState, type);
-}
-
-/* ================= 全局 UI ================= */
-function drawGlobalUI() {
-  ctx.save();
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-  const topY = 14;
-  const btnW = 78, btnH = 34, gap = 8;
-  const startX = 18;
-  const mapBtns = [
-    { label:'主城', target:'city' },
-    { label: mode.subMaps.farm.shortName, target:'farm' },
-    { label: mode.subMaps.mine.shortName, target:'mine' }
-  ];
-  for (let i=0;i<mapBtns.length;i++) {
-    const bx = startX + i*(btnW+gap);
-    const active = currentMap === mapBtns[i].target;
-    ctx.fillStyle = active ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
-    ctx.fillRect(bx, topY, btnW, btnH);
-    ctx.strokeStyle = active ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.3)';
-    ctx.lineWidth = active ? 2 : 1;
-    ctx.strokeRect(bx+0.5, topY+0.5, btnW-1, btnH-1);
-    ctx.fillStyle = active ? 'rgba(255,230,160,0.98)' : 'rgba(212,175,55,0.7)';
-    ctx.font = 'bold 14px "Courier New", monospace';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(mapBtns[i].label, bx+btnW/2, topY+btnH/2+1);
-  }
-
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(W-230, topY, 100, btnH);
-  ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
-  ctx.strokeRect(W-230+0.5, topY+0.5, 99, btnH-1);
-  ctx.fillStyle = 'rgba(255,220,120,0.95)';
-  ctx.font = 'bold 16px "Courier New", monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('$ '+money, W-180, topY+btnH/2+1);
-
-  const shopBtnX = W-120, shopBtnY = topY, shopBtnW = 100, shopBtnH = btnH;
-  ctx.fillStyle = shopOpen ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
-  ctx.fillRect(shopBtnX, shopBtnY, shopBtnW, shopBtnH);
-  ctx.strokeStyle = shopOpen ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.3)';
-  ctx.lineWidth = shopOpen ? 2 : 1;
-  ctx.strokeRect(shopBtnX+0.5, shopBtnY+0.5, shopBtnW-1, shopBtnH-1);
-  ctx.fillStyle = 'rgba(212,175,55,0.9)';
-  ctx.font = 'bold 14px "Courier New", monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('商 店', shopBtnX+shopBtnW/2, shopBtnY+shopBtnH/2+1);
-
-  drawTransportQueue();
-  ctx.restore();
-}
-
-function drawTransportQueue() {
-  if (transports.length === 0) return;
-  const startY = 62, bw = 200, bh = 24;
-  const bx = W-bw-18;
-  ctx.font = 'bold 11px "Courier New", monospace';
-  for (let i=0;i<transports.length && i<6;i++) {
-    const t = transports[i];
-    const by = startY + i*(bh+6);
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(bx, by, bw, bh);
-    ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
-    ctx.strokeRect(bx+0.5, by+0.5, bw-1, bh-1);
-    let label = '';
-    if (t.type === 'ally-to-farm') label = '兄弟→'+mode.subMaps.farm.shortName;
-    else if (t.type === 'ally-to-mine') label = '兄弟→'+mode.subMaps.mine.shortName;
-    else if (t.type === 'ally-to-city') label = '兄弟→主城';
-    else if (t.type === 'resource') {
-      const cfg = t.resourceType === 'farm' ? mode.subMaps.farm : mode.subMaps.mine;
-      label = cfg.resourceName + '回城';
-    }
-    ctx.fillStyle = 'rgba(212,175,55,0.9)';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(label, bx+8, by+bh/2+1);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = 'rgba(255,240,200,0.95)';
-    ctx.fillText(Math.ceil(t.timer)+'s', bx+bw-8, by+bh/2+1);
-    const prog = 1 - t.timer/t.maxTime;
-    ctx.fillStyle = 'rgba(212,175,55,0.5)';
-    ctx.fillRect(bx, by+bh-3, bw*prog, 3);
-  }
-}
-
-/* ================= 主城 UI ================= */
-function drawCityUI() {
-  ctx.save();
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-
-  if (!isTouchMode) {
-    const mx = mouse.x, my = mouse.y;
-    ctx.strokeStyle = 'rgba(212,175,55,0.8)'; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.arc(mx, my, 9, 0, Math.PI*2); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(mx-16, my); ctx.lineTo(mx-6, my);
-    ctx.moveTo(mx+6, my); ctx.lineTo(mx+16, my);
-    ctx.moveTo(mx, my-16); ctx.lineTo(mx, my-6);
-    ctx.moveTo(mx, my+6); ctx.lineTo(mx, my+16);
-    ctx.stroke();
-    ctx.fillStyle = 'rgba(212,175,55,0.9)';
-    ctx.fillRect(mx-1.5, my-1.5, 3, 3);
-  }
-
-  const bw = Math.min(260, W*0.38), bh = 12;
-  const bx = 22, by = H-50;
-  const ratio = clamp(player.hp/player.maxHp, 0, 1);
-  ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx-3, by-3, bw+6, bh+6);
-  ctx.fillStyle = '#3a1010'; ctx.fillRect(bx, by, bw, bh);
-  ctx.fillStyle = ratio > 0.35 ? '#c0392b' : '#e74c3c'; ctx.fillRect(bx, by, bw*ratio, bh);
-  ctx.fillStyle = 'rgba(212,175,55,0.25)'; ctx.fillRect(bx, by, bw*ratio, 3);
-  ctx.font = 'bold 12px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(255,230,200,0.9)';
-  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillText('生命 '+Math.max(0, Math.ceil(player.hp)), bx+4, by+bh/2+1);
-
-  ctx.textAlign = 'right';
-  ctx.font = 'bold 26px "Courier New", monospace';
-  ctx.fillStyle = player.reloadT > 0 ? 'rgba(220,160,60,0.9)' : 'rgba(255,235,190,0.95)';
-  ctx.fillText(player.reloadT > 0 ? '装填中…' : (player.ammo+' / '+player.mag), W-22, H-58);
-
-  ctx.textAlign = 'left';
-  ctx.font = 'bold 14px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(212,175,55,0.85)';
-  ctx.fillText('等级 '+level, 22, 34);
-  const xpRatio = clamp(xp/xpNext, 0, 1);
-  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(22, 44, 110, 5);
-  ctx.fillStyle = 'rgba(212,175,55,0.85)'; ctx.fillRect(22, 44, 110*xpRatio, 5);
-
-  ctx.font = 'bold 12px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(255,220,160,0.7)';
-  ctx.fillText('清除 '+kills, 22, 66);
-
-  ctx.font = 'bold 12px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(212,175,55,0.85)';
-  let allyTxt = mode.allyLabel+' ';
-  for (let i=0;i<MAX_ALLIES;i++) allyTxt += i < allies.length ? '●' : '○';
-  ctx.fillText(allyTxt, 22, 86);
-
-  if (combo > 1 && comboTimer > 0) {
-    ctx.font = 'bold 24px "Courier New", monospace';
-    ctx.fillStyle = 'rgba(255,140,70,'+clamp(comboTimer/2.2,0,1).toFixed(2)+')';
-    ctx.fillText('×'+combo, 22, 116);
-  }
-
-  drawMinimap();
-
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 11px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(212,175,55,0.35)';
-  ctx.fillText('暗 巷 · '+mode.title+' '+mode.year, W/2, 24);
-
-  if (isTouchMode) {
-    drawStick(moveStick, '110,200,255', '移动');
-    drawStick(aimStick, '212,175,55', '瞄准');
-    drawDashButton();
-  }
-
-  if (pausedForUpgrade && upgradeUI) drawUpgradeUI();
-
-  if (gameOver) {
-    ctx.fillStyle = 'rgba(10,5,0,0.72)'; ctx.fillRect(0, 0, W, H);
-    ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(212,175,55,0.95)';
-    const fs = Math.min(58, W*0.12);
-    ctx.font = 'bold '+fs+'px "Courier New", monospace';
-    ctx.fillText('倒 下 了', W/2, H/2-26);
-    ctx.fillStyle = 'rgba(255,220,190,0.85)';
-    ctx.font = 'bold '+Math.min(20, W*0.048)+'px "Courier New", monospace';
-    ctx.fillText('生存等级 '+level+' · 清除 '+kills+' 人', W/2, H/2+26);
-    ctx.fillStyle = 'rgba(255,255,255,'+(0.4+Math.sin(time*4)*0.3).toFixed(2)+')';
-    ctx.font = 'bold '+Math.min(17, W*0.042)+'px "Courier New", monospace';
-    ctx.fillText(isTouchMode ? '点击此处重新开始' : '按 R 重新开始', W/2, H/2+78);
-  }
-
-  ctx.restore();
-}
-
-/* ================= 副地图 UI ================= */
-function drawSubMapUI(mapState, type) {
-  ctx.save();
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const isFarm = type === 'cotton';
-  const cfg = isFarm ? mode.subMaps.farm : mode.subMaps.mine;
-  const boost = mode.boost;
-
-  const infoY = 60;
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(W/2-150, infoY, 300, 44);
-  ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
-  ctx.strokeRect(W/2-150+0.5, infoY+0.5, 299, 43);
-
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = 'bold 14px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(212,175,55,0.95)';
-  ctx.fillText(cfg.name, W/2, infoY+16);
-
-  ctx.font = 'bold 13px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(255,240,200,0.9)';
-  ctx.fillText('仓库: '+Math.floor(mapState.warehouse)+' '+cfg.resourceName+'  ·  兄弟: '+mapState.allies.length+' 人', W/2, infoY+32);
-
-  // 加速按钮
-  const boostBtnW = Math.min(280, W*0.58);
-  const boostBtnH = 50;
-  const boostBtnX = (W-boostBtnW)/2;
-  const boostBtnY = 112;
-  const boostActive = mapState.boostTimer > 0;
-  const stacks = mapState.boostStacks;
-  const bc = boost.color;
-  const pulse = 0.6 + Math.sin(time*8)*0.4;
-  const onCooldown = mapState.boostCooldown > 0;
-
-  if (boostActive) ctx.fillStyle = 'rgba('+bc[0]+','+bc[1]+','+bc[2]+','+(0.35+pulse*0.25).toFixed(2)+')';
-  else if (onCooldown) ctx.fillStyle = 'rgba(40,30,20,0.7)';
-  else ctx.fillStyle = 'rgba(50,30,18,0.65)';
-  ctx.fillRect(boostBtnX, boostBtnY, boostBtnW, boostBtnH);
-  ctx.strokeStyle = boostActive ? 'rgba('+bc[0]+','+bc[1]+','+bc[2]+',0.95)' : 'rgba('+bc[0]+','+bc[1]+','+bc[2]+',0.5)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(boostBtnX+0.5, boostBtnY+0.5, boostBtnW-1, boostBtnH-1);
-
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = 'bold 15px "Courier New", monospace';
-  ctx.fillStyle = boostActive ? 'rgba(255,240,220,0.98)' : 'rgba(255,210,170,0.95)';
-
-  let mainText = boost.name;
-  if (boostActive) {
-    const pct = Math.round(stacks * boost.boostPerStack * 100);
-    mainText = boost.name+' +'+pct+'%  ·  '+Math.ceil(mapState.boostTimer)+'s';
-  }
-  if (onCooldown) mainText = '冷却中 '+Math.ceil(mapState.boostCooldown)+'s';
-  ctx.fillText(mainText, W/2, boostBtnY+17);
-
-  ctx.font = 'bold 10px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(255,210,190,0.7)';
-  let subText = '';
-  if (boost.type === 'whip') subText = '全体兄弟 -'+boost.hpCost+' 血 · 可叠至 +100%';
-  else if (boost.type === 'money') subText = '花费 $'+boost.cost+' · 可叠至 +100%';
-  else if (boost.type === 'faith') subText = '无代价 · '+boost.cooldown+'秒冷却 · 可叠至 +100%';
-  ctx.fillText(subText, W/2, boostBtnY+35);
-
-  // 运送 / 召回
-  const btnW = Math.min(180, W*0.4);
-  const btnH = 48;
-  const bx1 = 30, by1 = H-70;
-  const bx2 = W-btnW-30, by2 = H-70;
-
-  const canShip = Math.floor(mapState.warehouse) > 0;
-  ctx.fillStyle = canShip ? 'rgba(212,175,55,0.28)' : 'rgba(0,0,0,0.5)';
-  ctx.fillRect(bx1, by1, btnW, btnH);
-  ctx.strokeStyle = canShip ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.25)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(bx1+0.5, by1+0.5, btnW-1, btnH-1);
-  ctx.fillStyle = canShip ? 'rgba(255,240,200,0.98)' : 'rgba(212,175,55,0.35)';
-  ctx.font = 'bold 15px "Courier New", monospace';
-  ctx.fillText('运送'+cfg.resourceName+'回城', bx1+btnW/2, by1+btnH/2+1);
-
-  const canRecall = mapState.allies.length > 0;
-  ctx.fillStyle = canRecall ? 'rgba(120,200,140,0.22)' : 'rgba(0,0,0,0.5)';
-  ctx.fillRect(bx2, by2, btnW, btnH);
-  ctx.strokeStyle = canRecall ? 'rgba(120,220,140,0.85)' : 'rgba(120,220,140,0.25)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(bx2+0.5, by2+0.5, btnW-1, btnH-1);
-  ctx.fillStyle = canRecall ? 'rgba(200,255,210,0.95)' : 'rgba(120,220,140,0.35)';
-  ctx.font = 'bold 15px "Courier New", monospace';
-  ctx.fillText('召回兄弟', bx2+btnW/2, by2+btnH/2+1);
-
-  ctx.font = 'bold 11px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(200,190,170,0.5)';
-  ctx.textAlign = 'center';
-  ctx.fillText('兄弟在资源点采集 · 每次 1 秒 · 运送需 10 秒', W/2, H-16);
-  ctx.restore();
-}
-
-/* ================= 商店 ================= */
-function drawShop() {
-  ctx.save();
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
-
-  const panelW = Math.min(420, W-40), panelH = 450;
-  const px = (W-panelW)/2, py = (H-panelH)/2;
-  ctx.fillStyle = 'rgba(20,15,10,0.96)'; ctx.fillRect(px, py, panelW, panelH);
-  ctx.strokeStyle = 'rgba(212,175,55,0.6)'; ctx.lineWidth = 2;
-  ctx.strokeRect(px+0.5, py+0.5, panelW-1, panelH-1);
-  ctx.strokeStyle = 'rgba(212,175,55,0.2)'; ctx.lineWidth = 1;
-  ctx.strokeRect(px+7, py+7, panelW-14, panelH-14);
-
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = 'bold 22px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(212,175,55,0.95)';
-  ctx.fillText('杂 货 铺', px+panelW/2, py+30);
-
-  ctx.font = 'bold 13px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(255,220,140,0.85)';
-  ctx.fillText('$ '+money, px+panelW/2, py+54);
-
-  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(px+panelW-46, py+10, 36, 32);
-  ctx.strokeStyle = 'rgba(212,175,55,0.4)'; ctx.lineWidth = 1;
-  ctx.strokeRect(px+panelW-46+0.5, py+10.5, 35, 31);
-  ctx.fillStyle = 'rgba(212,175,55,0.9)';
-  ctx.font = 'bold 16px "Courier New", monospace';
-  ctx.fillText('✕', px+panelW-28, py+26);
-
-  const itemH = 58;
-  const items = [
-    { label:'补充弹药 15发', price:20, can: money >= 20 },
-    { label:'草药酒 +30', price:15, can: money >= 15 },
-    { label:'雇佣'+mode.allyLabel, price:ALLY_PRICE, can: money >= ALLY_PRICE && allies.length < MAX_ALLIES },
-    { label:'派遣 → '+mode.subMaps.farm.name, price:0, can: allies.length > 0 },
-    { label:'派遣 → '+mode.subMaps.mine.name, price:0, can: allies.length > 0 },
-    { label:'返回模式选择', price:-1, can: true }
-  ];
-  const startY = py+70;
-  for (let i=0;i<items.length;i++) {
-    const it = items[i];
-    const iy = startY + i*(itemH+8);
-    ctx.fillStyle = it.can ? 'rgba(212,175,55,0.10)' : 'rgba(0,0,0,0.3)';
-    ctx.fillRect(px+24, iy, panelW-48, itemH);
-    ctx.strokeStyle = it.can ? 'rgba(212,175,55,0.4)' : 'rgba(212,175,55,0.15)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(px+24+0.5, iy+0.5, panelW-49, itemH-1);
-
-    ctx.textAlign = 'left';
-    ctx.font = 'bold 15px "Courier New", monospace';
-    ctx.fillStyle = it.can ? 'rgba(255,230,180,0.98)' : 'rgba(180,170,150,0.4)';
-    ctx.fillText(it.label, px+40, iy+itemH/2+1);
-
-    ctx.textAlign = 'right';
-    if (it.price > 0) {
-      ctx.fillStyle = it.can ? 'rgba(255,220,120,0.95)' : 'rgba(180,170,150,0.4)';
-      ctx.fillText('$'+it.price, px+panelW-40, iy+itemH/2+1);
-    } else if (it.price === 0) {
-      ctx.fillStyle = it.can ? 'rgba(120,220,140,0.9)' : 'rgba(180,170,150,0.4)';
-      ctx.fillText(it.can ? '免费' : '无兄弟', px+panelW-40, iy+itemH/2+1);
-    } else {
-      ctx.fillStyle = 'rgba(212,175,55,0.8)';
-      ctx.fillText('← 返回', px+panelW-40, iy+itemH/2+1);
-    }
-  }
-  ctx.restore();
-}
-
-/* ================= 摇杆绘制 ================= */
-function drawStick(s, rgb, label) {
-  if (!s.active) return;
-  ctx.beginPath(); ctx.arc(s.baseX, s.baseY, STICK_RADIUS, 0, Math.PI*2);
-  ctx.fillStyle = 'rgba('+rgb+',0.06)'; ctx.fill();
-  ctx.strokeStyle = 'rgba('+rgb+',0.28)'; ctx.lineWidth = 2; ctx.stroke();
-
-  const hx = s.curX, hy = s.curY;
-  ctx.beginPath(); ctx.moveTo(s.baseX, s.baseY); ctx.lineTo(hx, hy);
-  ctx.strokeStyle = 'rgba('+rgb+',0.25)'; ctx.lineWidth = 3; ctx.stroke();
-
-  const headR = STICK_RADIUS*0.38;
-  const grd = ctx.createRadialGradient(hx, hy, 0, hx, hy, headR);
-  grd.addColorStop(0, 'rgba('+rgb+',0.75)');
-  grd.addColorStop(1, 'rgba('+rgb+',0.35)');
-  ctx.beginPath(); ctx.arc(hx, hy, headR, 0, Math.PI*2);
-  ctx.fillStyle = grd; ctx.fill();
-  ctx.strokeStyle = 'rgba('+rgb+',0.85)'; ctx.lineWidth = 2; ctx.stroke();
-
-  ctx.fillStyle = 'rgba('+rgb+',0.4)';
-  ctx.font = 'bold 11px "Courier New", monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(label, s.baseX, s.baseY-STICK_RADIUS-14);
-}
-
-function drawDashButton() {
-  const cd = clamp(1 - player.dashCd/player.dashMaxCd, 0, 1);
-  const r = dashBtn.r;
-  ctx.beginPath(); ctx.arc(dashBtn.x, dashBtn.y, r, 0, Math.PI*2);
-  ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.fill();
-  if (cd < 1) {
-    ctx.beginPath(); ctx.moveTo(dashBtn.x, dashBtn.y);
-    ctx.arc(dashBtn.x, dashBtn.y, r, -Math.PI/2, -Math.PI/2 + Math.PI*2*cd);
-    ctx.closePath(); ctx.fillStyle = 'rgba(212,175,55,0.15)'; ctx.fill();
-  }
-  ctx.beginPath(); ctx.arc(dashBtn.x, dashBtn.y, r, 0, Math.PI*2);
-  ctx.strokeStyle = cd >= 1 ? 'rgba(212,175,55,0.85)' : 'rgba(212,175,55,0.3)';
-  ctx.lineWidth = 2.5; ctx.stroke();
-  ctx.fillStyle = cd >= 1 ? 'rgba(212,175,55,0.95)' : 'rgba(212,175,55,0.35)';
-  ctx.font = 'bold '+Math.round(r*0.55)+'px "Courier New", monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('冲', dashBtn.x, dashBtn.y+1);
-}
-
-/* ================= 升级界面 ================= */
-function drawUpgradeUI() {
-  const L = getUpgradeLayout();
-  const { cx, cy, cw, ch, rects } = L;
-  ctx.fillStyle = 'rgba(20,15,10,0.95)'; ctx.fillRect(cx, cy, cw, ch);
-  ctx.strokeStyle = 'rgba(212,175,55,0.5)'; ctx.lineWidth = 2;
-  ctx.strokeRect(cx+0.5, cy+0.5, cw-1, ch-1);
-  ctx.strokeStyle = 'rgba(212,175,55,0.18)'; ctx.lineWidth = 1;
-  ctx.strokeRect(cx+7, cy+7, cw-14, ch-14);
-
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(212,175,55,0.95)';
-  const fs = Math.min(22, cw*0.065);
-  ctx.font = 'bold '+fs+'px "Courier New", monospace';
-  ctx.fillText('选 择 强 化', cx+cw/2, cy+36);
-  ctx.font = 'bold '+Math.max(10, fs*0.5)+'px "Courier New", monospace';
-  ctx.fillStyle = 'rgba(212,175,55,0.5)';
-  ctx.fillText(isTouchMode ? '点击选项' : '按 1 / 2 / 3 或点击选择', cx+cw/2, cy+62);
-
-  for (let i=0;i<upgradeUI.choices.length;i++) {
-    const up = upgradeUI.choices[i];
-    const r = rects[i];
-    const hover = !isTouchMode && mouse.x > r.x && mouse.x < r.x+r.w && mouse.y > r.y && mouse.y < r.y+r.h;
-    ctx.fillStyle = hover ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.035)';
-    ctx.fillRect(r.x, r.y, r.w, r.h);
-    ctx.strokeStyle = hover ? 'rgba(212,175,55,0.7)' : 'rgba(212,175,55,0.22)';
-    ctx.lineWidth = hover ? 2 : 1;
-    ctx.strokeRect(r.x+0.5, r.y+0.5, r.w-1, r.h-1);
-
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    const nameSize = Math.min(17, r.w*0.075);
-    ctx.fillStyle = 'rgba(212,175,55,0.95)';
-    ctx.font = 'bold '+nameSize+'px "Courier New", monospace';
-    ctx.fillText((i+1)+'. '+up.name, r.x+14, r.y+r.h*0.34);
-    const descSize = Math.min(14, r.w*0.058);
-    ctx.fillStyle = 'rgba(230,220,200,0.7)';
-    ctx.font = descSize+'px "Courier New", monospace';
-    ctx.fillText(up.desc, r.x+14, r.y+r.h*0.7);
-  }
-}
-
-/* ================= 小地图 ================= */
-function drawMinimap() {
-  const size = Math.min(120, W*0.26);
-  const pad = 20, mx = W-size-pad, my = 70;
-  ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(mx, my, size, size);
-  ctx.strokeStyle = 'rgba(212,175,55,0.3)'; ctx.lineWidth = 1;
-  ctx.strokeRect(mx+0.5, my+0.5, size-1, size-1);
-
-  const s = size/WORLD;
-  ctx.fillStyle = 'rgba(140,130,120,0.25)';
-  for (let i=0;i<buildings.length;i++) {
-    const b = buildings[i];
-    ctx.fillRect(mx+b.x*s, my+b.y*s, Math.max(1, b.w*s), Math.max(1, b.h*s));
-  }
-  for (let i=0;i<pickups.length;i++) {
-    const p = pickups[i];
-    ctx.fillStyle = 'rgba(212,175,55,0.9)';
-    ctx.fillRect(mx+p.x*s-1.5, my+p.y*s-1.5, 3, 3);
-  }
-  for (let i=0;i<enemies.length;i++) {
-    const e = enemies[i];
-    ctx.fillStyle = e.isElite ? 'rgba(212,175,55,0.95)' : 'rgba(230,70,60,0.9)';
-    const sz = e.isElite ? 3.5 : 2.5;
-    ctx.fillRect(mx+e.x*s-sz/2, my+e.y*s-sz/2, sz, sz);
-  }
-  for (let i=0;i<allies.length;i++) {
-    const a = allies[i];
-    ctx.fillStyle = 'rgba(120,220,140,0.95)';
-    ctx.beginPath(); ctx.arc(mx+a.x*s, my+a.y*s, 2.2, 0, Math.PI*2); ctx.fill();
-  }
-  ctx.fillStyle = 'rgba(130,220,255,1)';
-  ctx.beginPath(); ctx.arc(mx+player.x*s, my+player.y*s, 3, 0, Math.PI*2); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.strokeRect(mx+(cam.x-W/2)*s, my+(cam.y-H/2)*s, W*s, H*s);
-  ctx.restore();
-}
-
-/* ================= 渲染总入口 ================= */
-function render() {
-  if (screen === 'start') { renderStartScreen(); return; }
-  if (currentMap === 'city') renderCity();
-  else if (currentMap === 'farm') renderSubMap(farm, 'cotton');
-  else if (currentMap === 'mine') renderSubMap(mine, 'gold');
-  drawGlobalUI();
-  if (shopOpen) drawShop();
-}
-
-/* ================= 初始化 ================= */
-function init() {
-  genWorld();
-
-  enemies = []; bullets = []; particles = []; pickups = []; allies = []; decals = [];
-  kills = 0; combo = 0; comboTimer = 0;
-  shake = 0; hitFlash = 0; time = 0;
-  gameOver = false; respawnTimer = 0; supplyTimer = 6;
-  pausedForUpgrade = false; upgradeUI = null;
-  autoTarget = null; autoTargetTimer = 0;
-  money = 100; shopOpen = false; transports = [];
-  currentMap = 'city';
-
-  level = 1; xp = 0; xpNext = 8;
-
-  player.x = WORLD/2; player.y = WORLD/2;
-  player.vx = player.vy = 0;
-  player.hp = player.maxHp = 100;
-  player.ammo = player.mag = 30;
-  player.fireCd = 0; player.reloadT = 0; player.reloadTime = 1.15;
-  player.dashCd = 0; player.dashMaxCd = 0.85; player.dashTime = 0;
-  player.angle = 0; player.bulletDmg = 14; player.fireRate = 0.075;
-  player.moveSpeed = 330; player.pickupRange = 28; player.pierce = 0;
-  player.drones = []; player.droneAngle = 0;
-  player.name = mode.playerName;
-
-  cam.x = player.x; cam.y = player.y;
-
-  farm.warehouse = 0; farm.allies = []; farm.nodes = [];
-  farm.lastUpdate = performance.now();
-  farm.boostStacks = 0; farm.boostTimer = 0; farm.boostCooldown = 0; farm.whipFlash = 0;
-  initSubMap(farm, 'cotton');
-
-  mine.warehouse = 0; mine.allies = []; mine.nodes = [];
-  mine.lastUpdate = performance.now();
-  mine.boostStacks = 0; mine.boostTimer = 0; mine.boostCooldown = 0; mine.whipFlash = 0;
-  initSubMap(mine, 'gold');
-
-  resetSticks();
-
-  addAlly(player.x+46, player.y+10);
-
-  for (let i=0;i<22;i++) spawnEnemy();
-
-  last = performance.now();
-}
-
-/* ================= 主循环 ================= */
-function loop(t) {
-  if (!last) last = t;
-  let dt = (t - last) / 1000;
-  last = t;
-  if (dt > 0.05) dt = 0.05;
-  if (dt < 0) dt = 0;
-
-  if (screen === 'start') {
-    renderStartScreen();
-  } else {
-    update(dt);
-    render();
-  }
-  requestAnimationFrame(loop);
-}
-
-/* ================= 启动 ================= */
-resize();
-initAudio();
-requestAnimationFrame(loop);
-
-document.addEventListener('gesturestart', e => e.preventDefault());
-document.addEventListener('dblclick', e => e.preventDefault());
+function getEnemyHpScale(lv){const c=BALANCE.enemyHpCurve;if(lv<=c.linearPhaseMaxLevel)return 1+(lv-1)*c.linearPerLevel;const base=1+(c.linearPhaseMaxLevel-1)*c.linearPerLevel;const exp=lv-c.linearPhaseMaxLevel;return base*Math.pow(c.expBase,exp*c.expMultiplier)}
+function getEnemyDmgScale(lv){const c=BALANCE.enemyDmgCurve;if(lv<=c.linearPhaseMaxLevel)return 1+(lv-1)*c.linearPerLevel;const base=1+(c.linearPhaseMaxLevel-1)*c.linearPerLevel;const exp=lv-c.linearPhaseMaxLevel;return base*Math.pow(c.expBase,exp*c.expMultiplier)}
+function getHealMult(lv){return Math.max(BALANCE.healMinMult,1-(lv-1)*BALANCE.healDecayPerLevel)}
+function getXpGemValue(enemyType,level,nextXp,isElite){const cfg=BALANCE.xpCurve;const lvFactor=Math.max(0,(level||1)-1);const basePct=cfg.basePercent*Math.pow(cfg.decayPerLevel,lvFactor);const pct=Math.max(cfg.minPercent,basePct);const typeMult=cfg.typeMultiplier[enemyType]||1;const eliteMult=isElite?BALANCE.eliteXpMult:1;return Math.max(1,Math.round((nextXp||10)*pct*typeMult*eliteMult))}
+
+/* 音效 */
+const AudioContext=window.AudioContext||window.webkitAudioContext;let audioCtx=null;
+function initAudio(){if(!audioCtx)audioCtx=new AudioContext();if(audioCtx.state==='suspended')audioCtx.resume()}
+function playSound(type){if(!audioCtx)return;const now=audioCtx.currentTime;
+if(type==='shoot'){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(600,now);o.frequency.exponentialRampToValueAtTime(100,now+0.08);g.gain.setValueAtTime(0.12,now);g.gain.linearRampToValueAtTime(0.01,now+0.08);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+0.08)}
+else if(type==='hit'){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='square';o.frequency.setValueAtTime(120,now);o.frequency.exponentialRampToValueAtTime(30,now+0.05);g.gain.setValueAtTime(0.1,now);g.gain.linearRampToValueAtTime(0.01,now+0.05);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+0.05)}
+else if(type==='explosion'){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='triangle';o.frequency.setValueAtTime(150,now);o.frequency.exponentialRampToValueAtTime(20,now+0.25);g.gain.setValueAtTime(0.3,now);g.gain.linearRampToValueAtTime(0.01,now+0.25);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+0.25)}
+else if(type==='levelup'){[400,600,800,1200].forEach((freq,i)=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(freq,now+i*0.06);g.gain.setValueAtTime(0.15,now+i*0.06);g.gain.linearRampToValueAtTime(0.01,now+i*0.06+0.1);o.connect(g);g.connect(audioCtx.destination);o.start(now+i*0.06);o.stop(now+i*0.06+0.1)})}
+else if(type==='boss'){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(100,now);o.frequency.linearRampToValueAtTime(40,now+0.6);g.gain.setValueAtTime(0.3,now);g.gain.linearRampToValueAtTime(0.01,now+0.6);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+0.6)}}
+
+/* 狀態 */
+const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d');
+let isGameRunning=false,isPaused=false,currentLang='zh-Hant',difficulty='normal',aimMode='auto',handMode='right';
+let score=0,highScore=parseInt(localStorage.getItem('neon_high_score')||'0',10);
+let gameTime=0,totalKills=0,lastBossTime=0,autoSaveTimer=0;
+let player=null,bullets=[],enemyBullets=[],enemies=[],particles=[],gems=[];
+
+/* I18N */
+const I18N={'zh-Hant':{subTitle:'無限肉鴿生存戰',labelDifficulty:'選擇遊戲難度',diffEasyText:'簡單',diffNormalText:'普通',diffHardText:'超頻狂暴',labelAimMode:'瞄準模式',aimAutoText:'自動瞄準',aimManualText:'手動瞄準',labelHandMode:'操作模式',handRightText:'右手模式',handLeftText:'左手模式',settingsBtnText:'設定',settingsTitle:'設定',settingsCloseBtnText:'關閉設定',startBtnText:'開始遊戲',continueBtnText:'繼續遊戲 (Auto-Save)',howToPlayBtnText:'玩法與敵方檔案',loadBtnText:'貼上存檔碼',labelScore:'分數:',labelBest:'最高:',pauseBtnText:'暫停',saveBtnText:'存檔碼',quitBtnText:'退出',autoSaveText:'自動儲存中...',bossText:'⚠️ 警告：無盡霸主 Boss 已登場 ⚠️',codexTitle:'玩法指南與敵方檔案',guideControlsTitle:'🎮 操作說明',guideControlsDesc:'電腦玩家可使用 WASD 或 方向鍵 移動。行動裝置玩家：自動瞄準模式下，按下畫面任意位置即可召喚移動搖桿；手動瞄準模式下，移動搖桿與瞄準搖桿分別位於左右半屏（依左右手模式而定）。搖桿平常位於角落，按下時會傳送到按點，放開後回歸角落。核心會自動瞄準最近的敵人發射雷射炮。',guideAimTitle:'🎯 瞄準模式',guideAimDesc:'自動瞄準：主炮會自動鎖定最近的敵人，移動搖桿可在畫面任意位置召喚。手動瞄準：畫面另一側會出現瞄準搖桿，拖動瞄準搖桿決定射擊方向，放開即停止射擊。',guideHandTitle:'🤚 左右手模式',guideHandDesc:'右手模式：移動搖桿在右半屏，瞄準搖桿在左半屏。左手模式：移動搖桿在左半屏，瞄準搖桿在右半屏。此分區僅在手動瞄準模式下生效。',guideUpgradesTitle:'⭐ 無限疊加升級',guideUpgradesDesc:'擊殺敵人拾取能量水晶可升級。所有加成（包含戰術無人機與等離子光刃）皆可無上限多次選擇並重複疊加效果！等離子光刃環繞時還能攔截敵方子彈。火力與射速升級的收益會隨選擇次數遞減。子彈傷害越高，子彈體積越大。',guideScalingTitle:'📈 爽快割草與大後期壓力',guideScalingDesc:'經驗曲線前期非常快（每級約 5～10 隻），23 級後中速（約 16 隻），大後期穩定在約 33 隻。普通敵人血量在 1～25 級平穩線性成長（每級 +6%），攻擊在 1～35 級平穩線性成長（每級 +1.2%）。60 級後敵人成長顯著加速，時間壓力最高可疊加 +200%，你必須持續走位、集火精英、謹慎使用技能。',guideEliteTitle:'⭐ 精英敵人（大後期核心威脅）',guideEliteDesc:'30 級後普通敵人有機率轉化為金色精英。精英擁有 5～7 倍生命值、2 倍攻擊力、1.3 倍移動速度，並對等離子光刃有 50% 抗性，單純圍一圈光刃無法快速清掉牠們。60 級後精英進入「狂暴狀態」：額外 +25% 血量、+15% 速度，外圈會發出紅金色脈衝光環。精英死亡時會產生半徑 140 的範圍爆炸（約 40 傷害），貼身補刀會被重傷，必須保持距離。精英狙擊手會發射顯眼的金色子彈，但仍可被光刃攔截。最佳應對方式是用主炮與無人機集火，配合走位拉扯。',codexEnemiesTitle:'👾 敵方威脅圖鑑',enemyChaserTitle:'Chaser (追擊者)',enemyChaserDesc:'數量眾多的基礎攻擊單位，會直線蜂擁向玩家。',enemySpeederTitle:'Speeder (疾速突擊者)',enemySpeederDesc:'生命值較低但移動速度極快，考量玩家反應速度。',enemySplitterTitle:'Splitter (裂變體)',enemySplitterDesc:'體型較大，被擊破時會迅速分裂成兩個高速小裂變體。',enemySniperTitle:'Sniper (遠程狙擊手)',enemySniperDesc:'會與玩家保持距離，並定期發射高速能量彈幕。',enemyTankTitle:'Tank (重裝坦克)',enemyTankDesc:'擁有龐大生命值與防禦，能阻擋大量的火力發射。',enemyEliteTitle:'Elite (精英敵人)',enemyEliteDesc:'30 級後出現的金色精英。擁有極高生命（×5～7）、雙倍攻擊、1.3 倍移動速度，對等離子光刃有 50% 抗性，死亡時產生半徑 140 的範圍爆炸（約 40 傷害）。60 級後精英進入狂暴狀態，額外 +25% 血量、+15% 速度，外圈發出紅金色脈衝。精英狙擊手的金色子彈仍可被光刃攔截。建議用主炮與無人機集火，保持距離避免爆炸波及。',closeGuideBtnText:'關閉圖鑑',quitModalTitle:'確定退出遊戲？',quitModalDesc:'未複製存檔碼的當前進度將會遺失。',cancelQuitBtnText:'取消',confirmQuitBtnText:'確定退出',pauseTitle:'遊戲暫停',resumeBtnText:'繼續遊戲',localSaveBtnText:'快速保存到本地',copyCodeBtnText:'複製文字存檔碼',restartBtnText:'重新開始',pauseQuitBtnText:'退出主選單',loadModalTitle:'貼上存檔碼',cancelLoadBtnText:'取消',confirmLoadBtnText:'載入進度',levelUpTitle:'選擇加成能力',gameOverTitle:'核心已毀損',finalScoreLabel:'最終得分:',finalKillsLabel:'擊殺數量:'},'en':{subTitle:'Infinite Roguelike Survivor',labelDifficulty:'Select Difficulty',diffEasyText:'EASY',diffNormalText:'NORMAL',diffHardText:'OVERDRIVE',labelAimMode:'Aim Mode',aimAutoText:'Auto Aim',aimManualText:'Manual Aim',labelHandMode:'Hand Mode',handRightText:'Right-handed',handLeftText:'Left-handed',settingsBtnText:'SETTINGS',settingsTitle:'SETTINGS',settingsCloseBtnText:'CLOSE SETTINGS',startBtnText:'START GAME',continueBtnText:'CONTINUE (Auto-Save)',howToPlayBtnText:'Codex & Manual',loadBtnText:'LOAD SAVE CODE',labelScore:'SCORE:',labelBest:'BEST:',pauseBtnText:'PAUSE',saveBtnText:'SAVE CODE',quitBtnText:'QUIT',autoSaveText:'Auto-Saving...',bossText:'⚠️ WARNING: DREADNOUGHT BOSS SPAWNED ⚠️',codexTitle:'Manual & Enemy Codex',guideControlsTitle:'🎮 Controls Guide',guideControlsDesc:'PC: use WASD / Arrow Keys. Touch: in Auto Aim mode, press anywhere on screen to summon the move joystick; in Manual Aim mode, the move and aim joysticks occupy separate halves according to hand mode. Joysticks rest at the corners, teleport to your press point, and return on release. The core auto-targets the nearest enemy.',guideAimTitle:'🎯 Aim Modes',guideAimDesc:'Auto Aim: the main cannon locks onto the nearest enemy, and the move joystick can be summoned anywhere on screen. Manual Aim: a second aim joystick appears on the opposite half; drag it to set firing direction, release to stop firing.',guideHandTitle:'🤚 Hand Modes',guideHandDesc:'Right-handed: move joystick on the right half, aim joystick on the left. Left-handed: move joystick on the left half, aim joystick on the right. This split only applies in Manual Aim mode.',guideUpgradesTitle:'⭐ Stackable Upgrades',guideUpgradesDesc:'Collect gems from defeated enemies to level up. All upgrades (including Drones & Plasma Blades) stack infinitely! Orbiting plasma blades also intercept incoming enemy bullets. Damage and fire-rate upgrades have diminishing returns. Higher bullet damage means bigger bullets.',guideScalingTitle:'📈 Power Fantasy & Late-Game Pressure',guideScalingDesc:'XP comes fast early (5–10 kills per level), moderate at level 23 (about 16 kills), then stabilizes around 33 kills late game. Normal enemy HP scales linearly to level 25 (+6%/level), damage linearly to level 35 (+1.2%/level). After level 60 enemy scaling accelerates sharply, and time pressure stacks up to +200%. You must keep moving, focus-fire elites, and play carefully.',guideEliteTitle:'⭐ Elite Enemies (Late-Game Threat)',guideEliteDesc:'After level 30, normal enemies have a chance to become golden elites. Elites have 5–7× HP, 2× damage, 1.3× speed, and 50% resistance to plasma blades, so a pure blade ring won\'t clear them quickly. After level 60, elites go berserk: +25% HP and +15% speed, with a red-gold pulsing aura. Elites explode on death with a 140-radius blast (~40 damage) — keep your distance when finishing them. Elite snipers fire visible golden bullets, but blades can still intercept them. Focus-fire with your cannon and drones while kiting.',codexEnemiesTitle:'👾 Enemy Threats Codex',enemyChaserTitle:'Chaser',enemyChaserDesc:'Basic chasers that swarm directly towards the core.',enemySpeederTitle:'Speeder',enemySpeederDesc:'Fast moving low-HP harassers requiring quick reflexes.',enemySplitterTitle:'Splitter',enemySplitterDesc:'Splits into two mini splitters upon destruction.',enemySniperTitle:'Sniper',enemySniperDesc:'Keeps distance and fires high-velocity laser rounds.',enemyTankTitle:'Tank',enemyTankDesc:'High durability brute that tanks oncoming bullets.',enemyEliteTitle:'Elite',enemyEliteDesc:'Golden elites appearing after level 30. Enormous HP (×5–7), ×2 damage, 1.3× speed, 50% resistance to blades, and a 140-radius death explosion (~40 damage). After level 60 they go berserk (+25% HP, +15% speed, red-gold pulsing aura). Elite sniper bullets are golden but can still be intercepted by blades. Focus-fire with cannon and drones, keep distance to avoid the blast.',closeGuideBtnText:'Close Codex',quitModalTitle:'QUIT GAME?',quitModalDesc:'Unsaved progress will be lost.',cancelQuitBtnText:'Cancel',confirmQuitBtnText:'Confirm Quit',pauseTitle:'GAME PAUSED',resumeBtnText:'RESUME',localSaveBtnText:'Quick Save Locally',copyCodeBtnText:'COPY SAVE CODE',restartBtnText:'RESTART',pauseQuitBtnText:'QUIT TO MENU',loadModalTitle:'PASTE SAVE CODE',cancelLoadBtnText:'Cancel',confirmLoadBtnText:'LOAD PROGRESS',levelUpTitle:'CHOOSE AN UPGRADE',gameOverTitle:'CORE TERMINATED',finalScoreLabel:'Final Score:',finalKillsLabel:'Total Kills:'}};
+
+/* DOM */
+const startOverlay=document.getElementById('startOverlay'),hud=document.getElementById('hud'),bossBanner=document.getElementById('bossBanner'),pauseModal=document.getElementById('pauseModal'),howToPlayModal=document.getElementById('howToPlayModal'),settingsModal=document.getElementById('settingsModal'),loadModal=document.getElementById('loadModal'),levelUpModal=document.getElementById('levelUpModal'),gameOverModal=document.getElementById('gameOverModal'),quitModal=document.getElementById('quitModal'),autoSaveBadge=document.getElementById('autoSaveBadge'),reviveModal=document.getElementById('reviveModal');
+const startButton=document.getElementById('startButton'),continueBtn=document.getElementById('continueBtn'),pauseBtn=document.getElementById('pauseBtn'),quickSaveBtn=document.getElementById('quickSaveBtn'),quickQuitBtn=document.getElementById('quickQuitBtn'),langToggleBtn=document.getElementById('langToggleBtn'),howToPlayBtn=document.getElementById('howToPlayBtn'),closeGuideBtn=document.getElementById('closeGuideBtn'),resumeGameBtn=document.getElementById('resumeGameBtn'),restartGameBtn=document.getElementById('restartGameBtn'),pauseQuitBtn=document.getElementById('pauseQuitBtn'),cancelQuitBtn=document.getElementById('cancelQuitBtn'),confirmQuitBtn=document.getElementById('confirmQuitBtn'),copySaveCodeBtn=document.getElementById('copySaveCodeBtn'),loadSaveBtn=document.getElementById('loadSaveBtn'),cancelLoadBtn=document.getElementById('cancelLoadBtn'),confirmLoadBtn=document.getElementById('confirmLoadBtn'),saveCodeInput=document.getElementById('saveCodeInput'),restartBtn=document.getElementById('restartBtn'),localSaveBtn=document.getElementById('localSaveBtn'),settingsBtn=document.getElementById('settingsBtn'),settingsCloseBtn=document.getElementById('settingsCloseBtn'),reviveBtn=document.getElementById('reviveBtn'),giveUpBtn=document.getElementById('giveUpBtn'),noSaveHint=document.getElementById('noSaveHint');
+
+/* 摇杆 */
+const moveJoystick={baseX:0,baseY:0,knobX:0,knobY:0,radius:60,active:false,touchId:null,mouse:false,dx:0,dy:0,appearT:0};
+const aimJoystick={baseX:0,baseY:0,knobX:0,knobY:0,radius:60,active:false,touchId:null,mouse:false,dx:0,dy:0,appearT:0};
+const MOVE_JOY_COLORS={fillActive:'rgba(6,182,212,0.9)',fillInactive:'rgba(6,182,212,0.4)',strokeActive:'rgba(56,189,248,0.75)',strokeInactive:'rgba(56,189,248,0.35)',shadow:'#06b6d4',ring:'rgba(6,182,212,0.18)'};
+const AIM_JOY_COLORS={fillActive:'rgba(236,72,153,0.9)',fillInactive:'rgba(236,72,153,0.4)',strokeActive:'rgba(236,72,153,0.75)',strokeInactive:'rgba(236,72,153,0.35)',shadow:'#ec4899',ring:'rgba(236,72,153,0.18)'};
+function getMoveJoystickDefaultPos(){const y=canvas.height-100;const x=handMode==='right'?canvas.width-100:100;return{x,y}}
+function getAimJoystickDefaultPos(){const y=canvas.height-100;const x=handMode==='right'?100:canvas.width-100;return{x,y}}
+function updateJoystickDefaults(){if(!moveJoystick.active){const p=getMoveJoystickDefaultPos();moveJoystick.baseX=p.x;moveJoystick.baseY=p.y;moveJoystick.knobX=p.x;moveJoystick.knobY=p.y;moveJoystick.dx=0;moveJoystick.dy=0}if(!aimJoystick.active){const p=getAimJoystickDefaultPos();aimJoystick.baseX=p.x;aimJoystick.baseY=p.y;aimJoystick.knobX=p.x;aimJoystick.knobY=p.y;aimJoystick.dx=0;aimJoystick.dy=0}}
+function resetMoveJoystick(){moveJoystick.active=false;moveJoystick.touchId=null;moveJoystick.mouse=false;moveJoystick.dx=0;moveJoystick.dy=0;const p=getMoveJoystickDefaultPos();moveJoystick.baseX=p.x;moveJoystick.baseY=p.y;moveJoystick.knobX=p.x;moveJoystick.knobY=p.y}
+function resetAimJoystick(){aimJoystick.active=false;aimJoystick.touchId=null;aimJoystick.mouse=false;aimJoystick.dx=0;aimJoystick.dy=0;const p=getAimJoystickDefaultPos();aimJoystick.baseX=p.x;aimJoystick.baseY=p.y;aimJoystick.knobX=p.x;aimJoystick.knobY=p.y}
+function resetAllJoysticks(){resetMoveJoystick();resetAimJoystick()}
+function activateJoystick(j,x,y,touchId,isMouse){j.active=true;j.touchId=touchId;j.mouse=!!isMouse;j.baseX=x;j.baseY=y;j.knobX=x;j.knobY=y;j.dx=0;j.dy=0;j.appearT=1}
+function updateJoystickFromPoint(j,cx,cy){let dx=cx-j.baseX,dy=cy-j.baseY;const dist=Math.hypot(dx,dy),maxR=j.radius;if(dist>maxR){dx=dx/dist*maxR;dy=dy/dist*maxR}j.knobX=j.baseX+dx;j.knobY=j.baseY+dy;j.dx=dx/maxR;j.dy=dy/maxR}
+function isUIElement(el){if(!el||!el.closest)return false;return!!(el.closest('button')||el.closest('textarea')||el.closest('input')||el.closest('#topBar')||el.closest('.neon-card'))}
+function isScrollableTarget(el){if(!el||!el.closest)return false;if(el.closest('textarea')||el.closest('input'))return true;const scroller=el.closest('.overflow-y-auto');return scroller?scroller.scrollHeight>scroller.clientHeight:false}
+function drawJoystickWithColors(j,colors){if(!j)return;if(j.appearT>0)j.appearT=Math.max(0,j.appearT-0.08);const scale=j.active?(1.0+j.appearT*0.15):0.85,r=j.radius*scale;ctx.save();ctx.beginPath();ctx.arc(j.baseX,j.baseY,r,0,Math.PI*2);ctx.fillStyle=j.active?'rgba(15,23,42,0.55)':'rgba(15,23,42,0.35)';ctx.fill();ctx.strokeStyle=j.active?colors.strokeActive:colors.strokeInactive;ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(j.baseX,j.baseY,r*0.55,0,Math.PI*2);ctx.strokeStyle=colors.strokeInactive;ctx.globalAlpha=0.6;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;ctx.beginPath();ctx.arc(j.knobX,j.knobY,r*0.42,0,Math.PI*2);ctx.fillStyle=j.active?colors.fillActive:colors.fillInactive;ctx.shadowColor=colors.shadow;ctx.shadowBlur=j.active?20:8;ctx.fill();if(!j.active){ctx.beginPath();ctx.arc(j.baseX,j.baseY,r+6+Math.sin(performance.now()/400)*3,0,Math.PI*2);ctx.strokeStyle=colors.ring;ctx.lineWidth=1.5;ctx.stroke()}ctx.restore()}
+function drawJoysticks(){if(!isGameRunning||!player)return;drawJoystickWithColors(moveJoystick,MOVE_JOY_COLORS);if(aimMode==='manual')drawJoystickWithColors(aimJoystick,AIM_JOY_COLORS)}
+
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;updateJoystickDefaults()}
+window.addEventListener('resize',resizeCanvas);resizeCanvas();updateJoystickDefaults();
+function applyLanguage(){const dict=I18N[currentLang];const langLabel=currentLang==='zh-Hant'?'EN':'繁中';document.getElementById('langText').innerText=langLabel;document.getElementById('startLangText').innerText=langLabel;for(const id in dict){const el=document.getElementById(id);if(el)el.innerText=dict[id]}}
+function toggleLanguage(){currentLang=currentLang==='zh-Hant'?'en':'zh-Hant';applyLanguage()}
+function updateOptionButtons(){document.querySelectorAll('.aim-mode-btn').forEach(btn=>{const val=btn.getAttribute('data-aim');const selected=val===aimMode;btn.classList.toggle('border-cyan-500',selected);btn.classList.toggle('bg-cyan-500/20',selected);btn.classList.toggle('text-cyan-300',selected);btn.classList.toggle('shadow-[0_0_12px_rgba(6,182,212,0.3)]',selected);btn.classList.toggle('border-slate-700',!selected);btn.classList.toggle('text-slate-400',!selected);btn.classList.toggle('bg-slate-900/40',!selected)});document.querySelectorAll('.hand-mode-btn').forEach(btn=>{const val=btn.getAttribute('data-hand');const selected=val===handMode;btn.classList.toggle('border-cyan-500',selected);btn.classList.toggle('bg-cyan-500/20',selected);btn.classList.toggle('text-cyan-300',selected);btn.classList.toggle('shadow-[0_0_12px_rgba(6,182,212,0.3)]',selected);btn.classList.toggle('border-slate-700',!selected);btn.classList.toggle('text-slate-400',!selected);btn.classList.toggle('bg-slate-900/40',!selected)})}
+function updateDifficultyButtons(){document.querySelectorAll('.diff-btn').forEach(btn=>{btn.classList.remove('diff-btn-active-easy','diff-btn-active-normal','diff-btn-active-hard');const val=btn.getAttribute('data-diff');if(val===difficulty)btn.classList.add('diff-btn-active-'+val)})}
+function getNearestEnemies(x,y,count){const arr=[];for(const e of enemies){if(e.markedForDeletion)continue;arr.push({e,d:Math.hypot(e.x-x,e.y-y)})}arr.sort((a,b)=>a.d-b.d);return arr.slice(0,count).map(o=>o.e)}
+
+/* Player */
+class Player{
+constructor(){this.x=canvas.width/2;this.y=canvas.height/2;this.radius=16;this.maxHp=100;this.hp=100;this.speed=4.2;this.level=1;this.xp=0;this.nextXp=10;this.pendingLevelUps=0;this.damage=25;this.fireRate=4.0;this.lastShotTime=0;this.lastDroneShotTime=0;this.multiTarget=1;this.pierce=0;this.bulletSize=5;this.magnetRadius=120;this.drones=0;this.blades=0;this.bladeAngle=0;this.damageUpgradeCount=0;this.fireRateUpgradeCount=0;this.hitFlash=0;this.invincibleTimer=0}
+getBulletRadius(){const r=5+Math.log2(Math.max(1,this.damage/25))*2;return Math.min(14,Math.max(3,r))}
+update(dt,keys){let dx=0,dy=0;if(keys['w']||keys['W']||keys['ArrowUp'])dy-=1;if(keys['s']||keys['S']||keys['ArrowDown'])dy+=1;if(keys['a']||keys['A']||keys['ArrowLeft'])dx-=1;if(keys['d']||keys['D']||keys['ArrowRight'])dx+=1;if(moveJoystick.active){dx=moveJoystick.dx;dy=moveJoystick.dy}let mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag;mag=1}if(mag<0.08){dx=0;dy=0;mag=0}if(mag>0){this.x+=dx*this.speed*dt*60;this.y+=dy*this.speed*dt*60}this.x=Math.max(this.radius,Math.min(canvas.width-this.radius,this.x));this.y=Math.max(this.radius,Math.min(canvas.height-this.radius,this.y));if(this.hitFlash>0)this.hitFlash-=dt*5;if(this.invincibleTimer>0)this.invincibleTimer-=dt;
+if(this.blades>0){this.bladeAngle+=dt*2.5;const bladeOrbitRadius=65;for(let i=0;i<this.blades;i++){const angle=this.bladeAngle+(i*Math.PI*2/this.blades);const bx=this.x+Math.cos(angle)*bladeOrbitRadius;const by=this.y+Math.sin(angle)*bladeOrbitRadius;for(let j=enemies.length-1;j>=0;j--){const enemy=enemies[j];if(enemy.markedForDeletion)continue;const edist=Math.hypot(enemy.x-bx,enemy.y-by);if(edist<enemy.radius+12){const bladeDmgMult=enemy.isElite?(1-BALANCE.eliteBladeResist):1;enemy.takeDamage(this.damage*0.4*dt*60*bladeDmgMult);createParticles(bx,by,'#38bdf8',2)}}for(let k=enemyBullets.length-1;k>=0;k--){const eb=enemyBullets[k];if(eb.markedForDeletion)continue;const bdist=Math.hypot(eb.x-bx,eb.y-by);if(bdist<eb.radius+BALANCE.bladeBlockRadius){eb.markedForDeletion=true;createParticles(eb.x,eb.y,'#f472b6',4)}}}}
+const now=performance.now()/1000;
+if(aimMode==='auto'){const hasAny=enemies.some(e=>!e.markedForDeletion);if(hasAny&&(now-this.lastShotTime>=(1/this.fireRate))){this.shootAuto();this.lastShotTime=now}const target=getNearestEnemy(this.x,this.y);if(this.drones>0&&target&&(now-this.lastDroneShotTime>=(1/this.fireRate))){const droneOrbitRadius=45;const t=performance.now()/1000;const droneRadius=Math.max(3,this.getBulletRadius()*0.75);for(let i=0;i<this.drones;i++){const dAngle=(t*1.5)+(i*Math.PI*2/this.drones);const dxPos=this.x+Math.cos(dAngle)*droneOrbitRadius;const dyPos=this.y+Math.sin(dAngle)*droneOrbitRadius;const angle=Math.atan2(target.y-dyPos,target.x-dxPos);bullets.push(new Bullet(dxPos,dyPos,angle,this.damage*0.6,droneRadius,'#06b6d4',this.pierce))}this.lastDroneShotTime=now}}
+else{if(aimJoystick.active){const aimMag=Math.hypot(aimJoystick.dx,aimJoystick.dy);if(aimMag>0.15&&(now-this.lastShotTime>=(1/this.fireRate))){const angle=Math.atan2(aimJoystick.dy,aimJoystick.dx);this.shootManual(angle);this.lastShotTime=now}}const target=getNearestEnemy(this.x,this.y);if(this.drones>0&&target&&(now-this.lastDroneShotTime>=(1/this.fireRate))){const droneOrbitRadius=45;const t=performance.now()/1000;const droneRadius=Math.max(3,this.getBulletRadius()*0.75);for(let i=0;i<this.drones;i++){const dAngle=(t*1.5)+(i*Math.PI*2/this.drones);const dxPos=this.x+Math.cos(dAngle)*droneOrbitRadius;const dyPos=this.y+Math.sin(dAngle)*droneOrbitRadius;const angle=Math.atan2(target.y-dyPos,target.x-dxPos);bullets.push(new Bullet(dxPos,dyPos,angle,this.damage*0.6,droneRadius,'#06b6d4',this.pierce))}this.lastDroneShotTime=now}}}
+shootAuto(){playSound('shoot');const targets=getNearestEnemies(this.x,this.y,this.multiTarget);if(targets.length===0)return;const radius=this.getBulletRadius();for(let i=0;i<this.multiTarget;i++){const t=targets[i%targets.length];const angle=Math.atan2(t.y-this.y,t.x-this.x);bullets.push(new Bullet(this.x,this.y,angle,this.damage,radius,'#38bdf8',this.pierce))}}
+shootManual(baseAngle){playSound('shoot');const radius=this.getBulletRadius();const spread=Math.min(0.12,0.8/Math.max(1,this.multiTarget));for(let i=0;i<this.multiTarget;i++){const offset=(i-(this.multiTarget-1)/2)*spread;bullets.push(new Bullet(this.x,this.y,baseAngle+offset,this.damage,radius,'#38bdf8',this.pierce))}}
+draw(){ctx.save();ctx.translate(this.x,this.y);if(this.invincibleTimer>0){ctx.globalAlpha=0.3+0.3*Math.sin(performance.now()/100);ctx.beginPath();ctx.arc(0,0,this.radius+12,0,Math.PI*2);ctx.strokeStyle='#fbbf24';ctx.lineWidth=3;ctx.stroke();ctx.globalAlpha=1}
+ctx.beginPath();ctx.arc(0,0,this.radius+8+Math.sin(performance.now()/200)*2,0,Math.PI*2);ctx.strokeStyle=this.hitFlash>0?'#ef4444':'rgba(56,189,248,0.35)';ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(0,0,this.radius+2,0,Math.PI*2);ctx.strokeStyle='#06b6d4';ctx.lineWidth=3;ctx.stroke();ctx.beginPath();ctx.arc(0,0,this.radius-4,0,Math.PI*2);ctx.fillStyle=this.hitFlash>0?'#f87171':'#38bdf8';ctx.shadowColor='#06b6d4';ctx.shadowBlur=15;ctx.fill();ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.fill();ctx.restore();
+const t=performance.now()/1000;if(this.drones>0){const droneOrbitRadius=45;for(let i=0;i<this.drones;i++){const dAngle=(t*1.5)+(i*Math.PI*2/this.drones);const dxPos=this.x+Math.cos(dAngle)*droneOrbitRadius;const dyPos=this.y+Math.sin(dAngle)*droneOrbitRadius;ctx.save();ctx.beginPath();ctx.arc(dxPos,dyPos,6,0,Math.PI*2);ctx.fillStyle='#a855f7';ctx.shadowColor='#c084fc';ctx.shadowBlur=10;ctx.fill();ctx.restore()}}
+if(this.blades>0){const bladeOrbitRadius=65;for(let i=0;i<this.blades;i++){const angle=this.bladeAngle+(i*Math.PI*2/this.blades);const bx=this.x+Math.cos(angle)*bladeOrbitRadius;const by=this.y+Math.sin(angle)*bladeOrbitRadius;ctx.save();ctx.translate(bx,by);ctx.rotate(angle+Math.PI/2);ctx.fillStyle='#38bdf8';ctx.shadowColor='#06b6d4';ctx.shadowBlur=12;ctx.beginPath();ctx.ellipse(0,0,14,4,0,0,Math.PI*2);ctx.fill();ctx.restore()}}}
+addXp(amount){this.xp+=amount;while(this.xp>=this.nextXp-1e-6){this.xp=Math.max(0,this.xp-this.nextXp);this.level++;this.nextXp=Math.floor(this.nextXp*1.32);this.pendingLevelUps++}updateHUD();if(this.pendingLevelUps>0&&!isPaused)triggerLevelUp()}}
+
+/* Bullet */
+class Bullet{constructor(x,y,angle,damage,size,color,pierce){this.x=x;this.y=y;this.speed=12;this.vx=Math.cos(angle)*this.speed;this.vy=Math.sin(angle)*this.speed;this.damage=damage;this.radius=size;this.color=color;this.pierceLeft=pierce||0;this.hitEnemies=new Set();this.markedForDeletion=false}update(dt){this.x+=this.vx*dt*60;this.y+=this.vy*dt*60;if(this.x<-20||this.x>canvas.width+20||this.y<-20||this.y>canvas.height+20)this.markedForDeletion=true}draw(){ctx.save();if(this.pierceLeft>0){ctx.beginPath();ctx.arc(this.x,this.y,this.radius+1.5,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=1.2;ctx.stroke()}ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fillStyle=this.color;ctx.shadowColor=this.color;ctx.shadowBlur=8;ctx.fill();ctx.restore()}}
+
+/* Enemy */
+class Enemy{constructor(type,x,y){this.type=type;this.x=x;this.y=y;this.markedForDeletion=false;this.lastShotTime=0;this.isElite=false;this.isBerserk=false;
+if(type==='chaser'){this.radius=12;this.speed=2.4;this.maxHp=30;this.color='#ef4444';this.xpValue=2}
+else if(type==='speeder'){this.radius=9;this.speed=4.5;this.maxHp=18;this.color='#f97316';this.xpValue=3}
+else if(type==='splitter'){this.radius=18;this.speed=1.8;this.maxHp=60;this.color='#a855f7';this.xpValue=5}
+else if(type==='miniSplitter'){this.radius=8;this.speed=3.6;this.maxHp=15;this.color='#c084fc';this.xpValue=2}
+else if(type==='sniper'){this.radius=14;this.speed=1.6;this.maxHp=45;this.color='#14b8a6';this.xpValue=6}
+else if(type==='tank'){this.radius=24;this.speed=1.1;this.maxHp=160;this.color='#10b981';this.xpValue=10}
+else if(type==='boss'){this.radius=45;this.speed=0.8;this.maxHp=1200;this.color='#f43f5e';this.xpValue=100}
+const diffHpMult=difficulty==='easy'?0.65:(difficulty==='hard'?1.25:1.0);const diffDmgMult=difficulty==='easy'?0.7:(difficulty==='hard'?1.15:1.0);this.damageMult=diffDmgMult;this.maxHp=Math.floor(this.maxHp*diffHpMult);const lv=(player&&player.level)?player.level:1;const hpScale=getEnemyHpScale(lv);const spdScale=Math.min(BALANCE.enemySpeedCap,1+Math.max(0,lv-1)*BALANCE.enemySpeedPerLevel);const dmgScale=getEnemyDmgScale(lv);const timePressure=Math.min(BALANCE.timePressureCap,Math.floor(gameTime/60)*BALANCE.timePressurePerMinute);this.maxHp=Math.floor(this.maxHp*hpScale*(1+timePressure));this.speed*=spdScale*(1+timePressure*0.12);this.damageMult*=dmgScale*(1+timePressure*0.5);
+if(type==='boss'){const bossLvBonus=1+Math.max(0,lv-1)*BALANCE.bossHpBonusPerLevel;this.maxHp=Math.floor(this.maxHp*bossLvBonus);this.lastShotTime=performance.now()/1000+1.8}
+if(type!=='boss'&&lv>=BALANCE.eliteStartLevel){const eliteChance=lv>=60?BALANCE.eliteChanceHigh:BALANCE.eliteChanceLow;if(Math.random()<eliteChance){this.isElite=true;const hpMult=lv>=60?BALANCE.eliteHpMultHigh:BALANCE.eliteHpMultLow;this.maxHp=Math.floor(this.maxHp*hpMult);this.damageMult*=BALANCE.eliteDmgMult;this.radius*=BALANCE.eliteRadiusMult;this.speed*=BALANCE.eliteSpeedBonus;this.color='#fbbf24';this.xpValue*=3;if(lv>=BALANCE.eliteBerserkLevel){this.isBerserk=true;this.maxHp=Math.floor(this.maxHp*(1+BALANCE.eliteBerserkHpBonus));this.speed*=(1+BALANCE.eliteBerserkSpeedBonus)}}}
+this.maxHp=Math.max(1,this.maxHp);this.hp=this.maxHp}
+update(dt){const angle=Math.atan2(player.y-this.y,player.x-this.x);const dist=Math.hypot(player.x-this.x,player.y-this.y);
+if(this.type==='sniper'){if(dist<220){this.x-=Math.cos(angle)*this.speed*dt*60;this.y-=Math.sin(angle)*this.speed*dt*60}else if(dist>350){this.x+=Math.cos(angle)*this.speed*dt*60;this.y+=Math.sin(angle)*this.speed*dt*60}const now=performance.now()/1000;if(now-this.lastShotTime>=BALANCE.sniperInterval){const dmg=BALANCE.sniperBulletDamage*this.damageMult;const bulletColor=this.isElite?'#fbbf24':'#14b8a6';const bulletSize=this.isElite?4.5:4;enemyBullets.push(new Bullet(this.x,this.y,angle,dmg,bulletSize,bulletColor,0));this.lastShotTime=now}}
+else if(this.type==='boss'){this.x+=Math.cos(angle)*this.speed*dt*60;this.y+=Math.sin(angle)*this.speed*dt*60;const lv=player?player.level:1;const burstInterval=Math.max(1.8,BALANCE.bossBurstInterval-lv*0.01);const burstCount=BALANCE.bossBurstCount+Math.floor(lv/20);const now=performance.now()/1000;if(now-this.lastShotTime>=burstInterval){const dmg=BALANCE.bossBurstDamage*this.damageMult;for(let i=0;i<burstCount;i++){const a=(i/burstCount)*Math.PI*2+now*0.6;enemyBullets.push(new Bullet(this.x,this.y,a,dmg,4,'#f43f5e',0))}this.lastShotTime=now}}
+else{this.x+=Math.cos(angle)*this.speed*dt*60;this.y+=Math.sin(angle)*this.speed*dt*60}}
+takeDamage(amount){if(this.markedForDeletion)return;this.hp-=amount;playSound('hit');if(this.hp<=0){this.markedForDeletion=true;playSound('explosion');createParticles(this.x,this.y,this.color,this.isElite?16:8);totalKills++;
+if(this.isElite){createParticles(this.x,this.y,'#fbbf24',this.isBerserk?40:30);if(player&&Math.hypot(player.x-this.x,player.y-this.y)<BALANCE.eliteDeathExplosionRadius){if(player.invincibleTimer<=0){player.hp-=BALANCE.eliteDeathExplosionDamage;player.hitFlash=1.0;playSound('explosion');if(player.hp<=0&&isGameRunning)gameOver()}}}
+if(this.type==='boss'){const xpNeeded=Math.max(1,player.nextXp-player.xp);const dropCount=15;const perGem=xpNeeded/dropCount;for(let i=0;i<dropCount;i++){const a=Math.random()*Math.PI*2;const r=Math.random()*this.radius*1.3;gems.push(new Gem(this.x+Math.cos(a)*r,this.y+Math.sin(a)*r,perGem))}createParticles(this.x,this.y,'#fbbf24',24)}
+else{const gemValue=getXpGemValue(this.type,player?player.level:1,player?player.nextXp:10,this.isElite);gems.push(new Gem(this.x,this.y,gemValue))}
+if(this.type==='splitter'){enemies.push(new Enemy('miniSplitter',this.x-10,this.y));enemies.push(new Enemy('miniSplitter',this.x+10,this.y))}
+if(player&&player.hp>0){const healMult=getHealMult(player.level||1);const baseHeal=this.type==='boss'?BALANCE.hpPerBossKill:BALANCE.hpPerKill;const heal=baseHeal*healMult*(this.isElite?BALANCE.eliteHealMult:1);player.hp=Math.min(player.maxHp,player.hp+heal)}
+const scoreMult=difficulty==='easy'?1:(difficulty==='hard'?2:1.5);score+=Math.floor(this.xpValue*10*scoreMult*(this.isElite?3:1));updateHUD()}}
+draw(){ctx.save();ctx.translate(this.x,this.y);
+if(this.isElite){const pulse=Math.sin(performance.now()/150)*3;if(this.isBerserk){ctx.beginPath();ctx.arc(0,0,this.radius+10+pulse,0,Math.PI*2);ctx.strokeStyle='rgba(251,113,133,0.85)';ctx.lineWidth=3;ctx.stroke();ctx.beginPath();ctx.arc(0,0,this.radius+6+Math.sin(performance.now()/200)*2,0,Math.PI*2);ctx.strokeStyle='rgba(251,191,36,0.9)';ctx.lineWidth=2.5;ctx.stroke()}
+else{ctx.beginPath();ctx.arc(0,0,this.radius+6+Math.sin(performance.now()/200)*2,0,Math.PI*2);ctx.strokeStyle='rgba(251,191,36,0.75)';ctx.lineWidth=2.5;ctx.stroke()}}
+ctx.beginPath();ctx.arc(0,0,this.radius,0,Math.PI*2);ctx.fillStyle=this.isBerserk?'#f43f5e':this.color;ctx.shadowColor=this.isBerserk?'#fb7185':this.color;ctx.shadowBlur=this.isElite?24:10;ctx.fill();
+if(this.hp<this.maxHp){const barWidth=this.radius*2;const hpPercent=Math.max(0,this.hp/this.maxHp);ctx.fillStyle='rgba(15,23,42,0.8)';ctx.fillRect(-this.radius,-this.radius-8,barWidth,4);ctx.fillStyle=this.isBerserk?'#fb7185':(this.isElite?'#fbbf24':'#ef4444');ctx.fillRect(-this.radius,-this.radius-8,barWidth*hpPercent,4)}ctx.restore()}}
+
+/* Particle / Gem */
+class Particle{constructor(x,y,color){this.x=x;this.y=y;this.color=color;this.radius=Math.random()*3+1;const angle=Math.random()*Math.PI*2;const speed=Math.random()*4+1;this.vx=Math.cos(angle)*speed;this.vy=Math.sin(angle)*speed;this.alpha=1.0}update(dt){this.x+=this.vx*dt*60;this.y+=this.vy*dt*60;this.alpha-=dt*2.5}draw(){ctx.save();ctx.globalAlpha=Math.max(0,this.alpha);ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fillStyle=this.color;ctx.fill();ctx.restore()}}
+function createParticles(x,y,color,count){for(let i=0;i<count;i++)particles.push(new Particle(x,y,color))}
+class Gem{constructor(x,y,value){this.x=x;this.y=y;this.value=value;this.radius=value>=10?6:(value>=5?5:4);this.markedForDeletion=false}update(dt){const dist=Math.hypot(player.x-this.x,player.y-this.y);if(dist<player.magnetRadius){const angle=Math.atan2(player.y-this.y,player.x-this.x);const pullSpeed=(1-dist/player.magnetRadius)*12+2;this.x+=Math.cos(angle)*pullSpeed*dt*60;this.y+=Math.sin(angle)*pullSpeed*dt*60}if(dist<player.radius+this.radius){this.markedForDeletion=true;player.addXp(this.value)}}draw(){ctx.save();ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fillStyle='#06b6d4';ctx.shadowColor='#38bdf8';ctx.shadowBlur=6;ctx.fill();ctx.restore()}}
+function getNearestEnemy(x,y){let nearest=null,minDist=Infinity;for(let i=0;i<enemies.length;i++){const e=enemies[i];if(e.markedForDeletion)continue;const d=Math.hypot(e.x-x,e.y-y);if(d<minDist){minDist=d;nearest=e}}return nearest}
+
+/* 升級池 */
+const UPGRADE_POOL=[
+{id:'drone',icon:'🛸',name:{'zh-Hant':'戰術無人機',en:'Tactical Drone'},desc:{'zh-Hant':'+1架自動環繞鎖敵發射無人機（可無上限疊加）',en:'+1 Orbiting Auto-firing Drone (Stackable)'},apply:()=>player.drones++},
+{id:'blade',icon:'⚔️',name:{'zh-Hant':'等離子光刃',en:'Plasma Blade'},desc:{'zh-Hant':'+1把旋轉光刃，可傷害敵人並攔截敵方子彈（精英對光刃有 50% 抗性）',en:'+1 Orbiting Blade that damages enemies and intercepts enemy bullets (Elites have 50% blade resistance)'},apply:()=>player.blades++},
+{id:'multiTarget',icon:'🎯',name:{'zh-Hant':'多目標鎖定',en:'Multi-Target Lock'},desc:{'zh-Hant':'自動瞄準時同時鎖定 +1 個敵人；手動瞄準時額外發射 1 顆扇形子彈',en:'Auto Aim locks +1 additional enemy; Manual Aim fires +1 extra spread bullet'},apply:()=>player.multiTarget++},
+{id:'pierce',icon:'➡️',name:{'zh-Hant':'穿透彈',en:'Piercing Rounds'},desc:{'zh-Hant':'子彈可額外穿透 1 個敵人',en:'Bullets pierce +1 extra enemy'},apply:()=>player.pierce++},
+{id:'damage',icon:'💥',name:{'zh-Hant':'火力強化',en:'Damage Boost'},desc:{'zh-Hant':'增加基礎砲擊傷害（選擇次數越多，收益越低，最低 ×1.20；傷害越高子彈越大）',en:'Increase bullet damage (diminishing returns, minimum ×1.20; bigger damage = bigger bullet)'},apply:()=>{const count=player.damageUpgradeCount||0;const mult=Math.max(BALANCE.damageMultFloor,BALANCE.damageMultMax-count*BALANCE.damageMultDecay);player.damage*=mult;player.damageUpgradeCount=count+1}},
+{id:'fireRate',icon:'⚡',name:{'zh-Hant':'過載射速',en:'Overdrive Fire Rate'},desc:{'zh-Hant':'提升砲擊頻率（選擇次數越多，收益越低，最低 ×1.12）',en:'Increase fire rate (diminishing returns, minimum ×1.12)'},apply:()=>{const count=player.fireRateUpgradeCount||0;const mult=Math.max(BALANCE.fireRateMultFloor,BALANCE.fireRateMultMax-count*BALANCE.fireRateMultDecay);player.fireRate*=mult;player.fireRateUpgradeCount=count+1}},
+{id:'speed',icon:'👟',name:{'zh-Hant':'推進引擎',en:'Thruster Engine'},desc:{'zh-Hant':'提升 20% 核心移動速度',en:'Increase Move Speed by 20%'},apply:()=>player.speed*=1.2},
+{id:'magnet',icon:'🧲',name:{'zh-Hant':'高壓磁場',en:'Crystal Magnet'},desc:{'zh-Hant':'擴大 40% 經驗水晶拾取範圍',en:'Increase Magnet Pickup Range by 40%'},apply:()=>player.magnetRadius*=1.4},
+{id:'heal',icon:'❤️',name:{'zh-Hant':'核心修復',en:'Core Repair'},desc:{'zh-Hant':'立即恢復 60% 生命值並提升 25 點血量上限',en:'Restore 60% HP & Raise Max HP by 25'},apply:()=>{player.maxHp+=25;player.hp=Math.min(player.maxHp,player.hp+player.maxHp*0.6)}}];
+
+function triggerLevelUp(){playSound('levelup');isPaused=true;resetAllJoysticks();const container=document.getElementById('upgradeCardsContainer');container.innerHTML='';const shuffled=[...UPGRADE_POOL].sort(()=>0.5-Math.random()).slice(0,3);shuffled.forEach(upgrade=>{const card=document.createElement('div');card.className='upgrade-card neon-card p-4 rounded-2xl border border-slate-700/60 flex items-center space-x-4 cursor-pointer text-left';card.innerHTML=`<div class="text-3xl">${upgrade.icon}</div><div class="flex-1"><h4 class="font-extrabold text-cyan-300 text-sm">${upgrade.name[currentLang]}</h4><p class="text-xs text-slate-400 mt-0.5">${upgrade.desc[currentLang]}</p></div>`;card.addEventListener('click',()=>onUpgradeSelected(upgrade));container.appendChild(card)});levelUpModal.classList.remove('hidden')}
+function onUpgradeSelected(upgrade){upgrade.apply();player.pendingLevelUps=Math.max(0,(player.pendingLevelUps||1)-1);levelUpModal.classList.add('hidden');if(player.pendingLevelUps>0){triggerLevelUp()}else{isPaused=false;resetAllJoysticks();saveAutoSaveData()}}
+
+/* 輸入 */
+const keys={};window.addEventListener('keydown',e=>{keys[e.key]=true;if(e.key==='Escape'&&isGameRunning)togglePause()});window.addEventListener('keyup',e=>keys[e.key]=false);
+window.addEventListener('touchstart',e=>{if(!isGameRunning||isPaused)return;if(isUIElement(e.target)||isScrollableTarget(e.target))return;for(const touch of e.changedTouches){const x=touch.clientX,y=touch.clientY;const half=canvas.width/2;if(aimMode==='auto'){if(!moveJoystick.active){activateJoystick(moveJoystick,x,y,touch.identifier,false);updateJoystickFromPoint(moveJoystick,x,y);e.preventDefault()}}else{const inMoveHalf=(handMode==='right')?(x>half):(x<half);const inAimHalf=(handMode==='right')?(x<half):(x>half);if(inMoveHalf&&!moveJoystick.active){activateJoystick(moveJoystick,x,y,touch.identifier,false);updateJoystickFromPoint(moveJoystick,x,y);e.preventDefault()}else if(inAimHalf&&!aimJoystick.active){activateJoystick(aimJoystick,x,y,touch.identifier,false);updateJoystickFromPoint(aimJoystick,x,y);e.preventDefault()}}}},{passive:false});
+window.addEventListener('touchmove',e=>{for(const touch of e.changedTouches){if(moveJoystick.active&&touch.identifier===moveJoystick.touchId){updateJoystickFromPoint(moveJoystick,touch.clientX,touch.clientY);e.preventDefault()}else if(aimJoystick.active&&touch.identifier===aimJoystick.touchId){updateJoystickFromPoint(aimJoystick,touch.clientX,touch.clientY);e.preventDefault()}}},{passive:false});
+function handleTouchEnd(e){for(const touch of e.changedTouches){if(touch.identifier===moveJoystick.touchId)resetMoveJoystick();if(touch.identifier===aimJoystick.touchId)resetAimJoystick()}}
+window.addEventListener('touchend',handleTouchEnd,{passive:false});window.addEventListener('touchcancel',handleTouchEnd,{passive:false});
+window.addEventListener('mousedown',e=>{if(!isGameRunning||isPaused)return;if(isUIElement(e.target)||isScrollableTarget(e.target))return;if(e.button!==0)return;const x=e.clientX,y=e.clientY;const half=canvas.width/2;if(aimMode==='auto'){if(!moveJoystick.active){activateJoystick(moveJoystick,x,y,null,true);updateJoystickFromPoint(moveJoystick,x,y)}}else{const inMoveHalf=(handMode==='right')?(x>half):(x<half);const inAimHalf=(handMode==='right')?(x<half):(x>half);if(inMoveHalf&&!moveJoystick.active){activateJoystick(moveJoystick,x,y,null,true);updateJoystickFromPoint(moveJoystick,x,y)}else if(inAimHalf&&!aimJoystick.active){activateJoystick(aimJoystick,x,y,null,true);updateJoystickFromPoint(aimJoystick,x,y)}}});
+window.addEventListener('mousemove',e=>{if(moveJoystick.active&&moveJoystick.mouse)updateJoystickFromPoint(moveJoystick,e.clientX,e.clientY);else if(aimJoystick.active&&aimJoystick.mouse)updateJoystickFromPoint(aimJoystick,e.clientX,e.clientY)});
+window.addEventListener('mouseup',()=>{if(moveJoystick.active&&moveJoystick.mouse)resetMoveJoystick();if(aimJoystick.active&&aimJoystick.mouse)resetAimJoystick()});
+
+/* 生成器 */
+function spawnEnemies(dt){gameTime+=dt;if(gameTime-lastBossTime>=60){lastBossTime=gameTime;playSound('boss');bossBanner.classList.remove('hidden');setTimeout(()=>bossBanner.classList.add('hidden'),3500);const side=Math.floor(Math.random()*4);const bx=side===0?0:(side===1?canvas.width:Math.random()*canvas.width);const by=side===2?0:(side===3?canvas.height:Math.random()*canvas.height);enemies.push(new Enemy('boss',bx,by))}
+const spawnRate=Math.max(0.3,1.4-Math.floor(gameTime/30)*0.07);const diffRate=difficulty==='easy'?1.3:(difficulty==='hard'?0.7:1.0);const lv=(player&&player.level)?player.level:1;const lvSpawnBoost=Math.min(0.35,Math.max(0,lv-1)*0.008);const effectiveSpawnRate=spawnRate*diffRate*(1-lvSpawnBoost);
+if(Math.random()<(dt/Math.max(0.3,effectiveSpawnRate))){const side=Math.floor(Math.random()*4);const ex=side===0?-20:(side===1?canvas.width+20:Math.random()*canvas.width);const ey=side===2?-20:(side===3?canvas.height+20:Math.random()*canvas.height);const rand=Math.random();let type='chaser';if(rand>0.85)type='tank';else if(rand>0.70)type='sniper';else if(rand>0.50)type='splitter';else if(rand>0.30)type='speeder';enemies.push(new Enemy(type,ex,ey))}}
+
+/* 存檔 */
+function saveAutoSaveData(){if(!isGameRunning||!player||player.hp<=0)return;const state={score,gameTime,totalKills,difficulty,lastBossTime,aimMode,handMode,player:{hp:player.hp,maxHp:player.maxHp,level:player.level,xp:player.xp,nextXp:player.nextXp,pendingLevelUps:player.pendingLevelUps,damage:player.damage,fireRate:player.fireRate,speed:player.speed,multiTarget:player.multiTarget,pierce:player.pierce,drones:player.drones,blades:player.blades,magnetRadius:player.magnetRadius,bulletSize:player.bulletSize,damageUpgradeCount:player.damageUpgradeCount||0,fireRateUpgradeCount:player.fireRateUpgradeCount||0}};try{localStorage.setItem('neon_autosave',JSON.stringify(state))}catch(e){}autoSaveBadge.classList.remove('opacity-0');setTimeout(()=>autoSaveBadge.classList.add('opacity-0'),1500)}
+function checkAutoSave(){const saved=localStorage.getItem('neon_autosave');if(saved)continueBtn.classList.remove('hidden');else continueBtn.classList.add('hidden')}
+function loadAutoSaveData(){const saved=localStorage.getItem('neon_autosave');if(!saved)return;let data;try{data=JSON.parse(saved)}catch(e){return}applyGameStateData(data);startGame(true)}
+function applyGameStateData(data){score=data.score||0;gameTime=data.gameTime||0;totalKills=data.totalKills||0;difficulty=data.difficulty||'normal';aimMode=data.aimMode||'auto';handMode=data.handMode||'right';updateOptionButtons();updateDifficultyButtons();bullets=[];enemyBullets=[];enemies=[];particles=[];gems=[];player=new Player();if(data.player){const p=data.player;if(p.multiTarget==null&&p.multishot!=null)p.multiTarget=p.multishot;if(p.pierce==null)p.pierce=0;Object.assign(player,p)}if(!player.multiTarget||player.multiTarget<1)player.multiTarget=1;if(!player.pierce||player.pierce<0)player.pierce=0;player.pendingLevelUps=player.pendingLevelUps||0;player.damageUpgradeCount=player.damageUpgradeCount||0;player.fireRateUpgradeCount=player.fireRateUpgradeCount||0;lastBossTime=(data.lastBossTime!=null)?data.lastBossTime:(data.gameTime||0);autoSaveTimer=0;updateJoystickDefaults()}
+
+/* HUD */
+function updateHUD(){if(!player)return;document.getElementById('hpFill').style.width=`${Math.max(0,(player.hp/player.maxHp)*100)}%`;document.getElementById('hpText').innerText=`${Math.ceil(Math.max(0,player.hp))} / ${player.maxHp}`;const xpPct=player.nextXp>0?(player.xp/player.nextXp)*100:0;document.getElementById('xpFill').style.width=`${Math.min(100,Math.max(0,xpPct))}%`;document.getElementById('levelText').innerText=player.level;document.getElementById('scoreText').innerText=score;document.getElementById('bestScoreText').innerText=highScore;document.getElementById('droneStat').innerText=player.drones;document.getElementById('bladeStat').innerText=player.blades;document.getElementById('damageStat').innerText=Math.round(player.damage);document.getElementById('fireRateStat').innerText=player.fireRate.toFixed(1);document.getElementById('pierceStat').innerText=player.pierce;document.getElementById('multiStat').innerText=player.multiTarget}
+
+/* 遊戲循環 */
+let lastTime=0;function gameLoop(timestamp){if(!lastTime)lastTime=timestamp;const dt=Math.min(0.1,(timestamp-lastTime)/1000);lastTime=timestamp;ctx.clearRect(0,0,canvas.width,canvas.height);drawBackgroundGrid();
+if(isGameRunning&&!isPaused&&player){autoSaveTimer+=dt;if(autoSaveTimer>=10){autoSaveTimer=0;saveAutoSaveData()}player.update(dt,keys);spawnEnemies(dt);for(const b of bullets)b.update(dt);for(const eb of enemyBullets)eb.update(dt);for(const e of enemies)e.update(dt);for(const p of particles)p.update(dt);for(const g of gems)g.update(dt);
+for(const bullet of bullets){if(bullet.markedForDeletion)continue;for(const enemy of enemies){if(enemy.markedForDeletion)continue;if(bullet.hitEnemies.has(enemy))continue;const dist=Math.hypot(enemy.x-bullet.x,enemy.y-bullet.y);if(dist<enemy.radius+bullet.radius){bullet.hitEnemies.add(enemy);enemy.takeDamage(bullet.damage);if(bullet.pierceLeft>0)bullet.pierceLeft--;else{bullet.markedForDeletion=true;break}}}}
+for(const eb of enemyBullets){if(eb.markedForDeletion)continue;const dist=Math.hypot(player.x-eb.x,player.y-eb.y);if(dist<player.radius+eb.radius){eb.markedForDeletion=true;if(player.invincibleTimer<=0){player.hp-=eb.damage;player.hitFlash=1.0;playSound('hit');if(player.hp<=0){gameOver();break}}}}
+if(isGameRunning){for(const enemy of enemies){if(enemy.markedForDeletion)continue;const dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<player.radius+enemy.radius){const isBoss=enemy.type==='boss';const dps=(isBoss?BALANCE.bossBodyDamagePerSec:BALANCE.bodyDamagePerSec)*enemy.damageMult;if(player.invincibleTimer<=0){player.hp-=dps*dt;player.hitFlash=1.0;if(player.hp<=0){gameOver();break}}}}}
+bullets=bullets.filter(b=>!b.markedForDeletion);enemyBullets=enemyBullets.filter(eb=>!eb.markedForDeletion);enemies=enemies.filter(e=>!e.markedForDeletion);particles=particles.filter(p=>p.alpha>0);gems=gems.filter(g=>!g.markedForDeletion);updateHUD()}
+if(isGameRunning&&player){for(const g of gems)g.draw();for(const b of bullets)b.draw();for(const eb of enemyBullets)eb.draw();for(const e of enemies)e.draw();for(const p of particles)p.draw();player.draw();drawJoysticks()}
+requestAnimationFrame(gameLoop)}
+function drawBackgroundGrid(){ctx.save();ctx.strokeStyle='rgba(30,41,59,0.4)';ctx.lineWidth=1;const gridSize=40;for(let x=0;x<canvas.width;x+=gridSize){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=gridSize){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.restore()}
+
+/* 流程 */
+function startGame(isContinuing=false){initAudio();resetAllJoysticks();updateJoystickDefaults();if(!isContinuing){score=0;gameTime=0;totalKills=0;lastBossTime=0;autoSaveTimer=0;player=new Player();bullets=[];enemyBullets=[];enemies=[];particles=[];gems=[]}
+isGameRunning=true;isPaused=false;startOverlay.classList.add('hidden');hud.classList.remove('hidden');gameOverModal.classList.add('hidden');reviveModal.classList.add('hidden');pauseModal.classList.add('hidden');levelUpModal.classList.add('hidden');quitModal.classList.add('hidden');settingsModal.classList.add('hidden');bossBanner.classList.add('hidden');updateHUD();if(isContinuing&&player&&player.pendingLevelUps>0)triggerLevelUp()}
+function togglePause(){if(!isGameRunning)return;if(!levelUpModal.classList.contains('hidden'))return;if(!quitModal.classList.contains('hidden'))return;isPaused=!isPaused;if(isPaused){resetAllJoysticks();pauseModal.classList.remove('hidden')}else pauseModal.classList.add('hidden')}
+function gameOver(){if(!isGameRunning)return;isGameRunning=false;resetAllJoysticks();playSound('explosion');if(score>highScore){highScore=score;localStorage.setItem('neon_high_score',String(highScore))}
+const hasSave=!!localStorage.getItem('neon_autosave');if(hasSave){reviveModal.classList.remove('hidden');noSaveHint.classList.add('hidden');reviveBtn.disabled=false;reviveBtn.classList.remove('opacity-50','cursor-not-allowed')}
+else{reviveModal.classList.remove('hidden');noSaveHint.classList.remove('hidden');reviveBtn.disabled=true;reviveBtn.classList.add('opacity-50','cursor-not-allowed')}
+hud.classList.add('hidden');levelUpModal.classList.add('hidden')}
+function returnToMainMenu(){isGameRunning=false;isPaused=false;resetAllJoysticks();pauseModal.classList.add('hidden');levelUpModal.classList.add('hidden');gameOverModal.classList.add('hidden');reviveModal.classList.add('hidden');quitModal.classList.add('hidden');howToPlayModal.classList.add('hidden');settingsModal.classList.add('hidden');startOverlay.classList.remove('hidden');hud.classList.add('hidden');bossBanner.classList.add('hidden');updateDifficultyButtons();checkAutoSave()}
+
+/* 按鈕 */
+startButton.addEventListener('click',()=>startGame(false));continueBtn.addEventListener('click',loadAutoSaveData);pauseBtn.addEventListener('click',togglePause);resumeGameBtn.addEventListener('click',togglePause);restartBtn.addEventListener('click',()=>startGame(false));restartGameBtn.addEventListener('click',()=>startGame(false));
+howToPlayBtn.addEventListener('click',()=>howToPlayModal.classList.remove('hidden'));closeGuideBtn.addEventListener('click',()=>howToPlayModal.classList.add('hidden'));
+settingsBtn.addEventListener('click',()=>settingsModal.classList.remove('hidden'));settingsCloseBtn.addEventListener('click',()=>settingsModal.classList.add('hidden'));
+pauseQuitBtn.addEventListener('click',()=>quitModal.classList.remove('hidden'));
+quickQuitBtn.addEventListener('click',()=>{if(isGameRunning){if(!levelUpModal.classList.contains('hidden'))return;isPaused=true;resetAllJoysticks();quitModal.classList.remove('hidden')}else returnToMainMenu()});
+cancelQuitBtn.addEventListener('click',()=>{quitModal.classList.add('hidden');if(isGameRunning){if(pauseModal.classList.contains('hidden'))isPaused=false;else isPaused=true}});
+confirmQuitBtn.addEventListener('click',()=>{quitModal.classList.add('hidden');returnToMainMenu()});
+let localSaveResetTimer=null;localSaveBtn.addEventListener('click',()=>{if(!isGameRunning||!player||player.hp<=0){alert(currentLang==='zh-Hant'?'目前沒有可儲存的遊戲進度！':'No game progress to save!');return}saveAutoSaveData();checkAutoSave();const label=document.getElementById('localSaveBtnText');if(!label)return;label.innerText=currentLang==='zh-Hant'?'✅ 已保存到本地':'✅ Saved Locally';if(localSaveResetTimer)clearTimeout(localSaveResetTimer);localSaveResetTimer=setTimeout(()=>{label.innerText=I18N[currentLang].localSaveBtnText},1500)});
+function copySaveToClipboard(){let saved=localStorage.getItem('neon_autosave');if(isGameRunning&&player&&player.hp>0){saveAutoSaveData();saved=localStorage.getItem('neon_autosave')}if(!saved){alert(currentLang==='zh-Hant'?'目前沒有可複製的存檔！':'No save data to copy!');return}const code=btoa(encodeURIComponent(saved));if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(()=>{alert(currentLang==='zh-Hant'?'存檔代碼已成功複製到剪貼簿！':'Save code copied to clipboard!')}).catch(()=>{prompt(currentLang==='zh-Hant'?'請複製以下存檔代碼：':'Copy your save code below:',code)})}else{prompt(currentLang==='zh-Hant'?'請複製以下存檔代碼：':'Copy your save code below:',code)}}
+quickSaveBtn.addEventListener('click',copySaveToClipboard);copySaveCodeBtn.addEventListener('click',copySaveToClipboard);
+loadSaveBtn.addEventListener('click',()=>loadModal.classList.remove('hidden'));cancelLoadBtn.addEventListener('click',()=>loadModal.classList.add('hidden'));
+confirmLoadBtn.addEventListener('click',()=>{const raw=saveCodeInput.value.trim();if(!raw)return;try{const jsonStr=decodeURIComponent(atob(raw));const data=JSON.parse(jsonStr);applyGameStateData(data);loadModal.classList.add('hidden');saveCodeInput.value='';startGame(true)}catch(e){alert(currentLang==='zh-Hant'?'無效的存檔代碼！':'Invalid save code!')}});
+document.querySelectorAll('.diff-btn').forEach(btn=>{btn.addEventListener('click',(e)=>{difficulty=e.currentTarget.getAttribute('data-diff');updateDifficultyButtons()})});
+document.querySelectorAll('.aim-mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{aimMode=btn.getAttribute('data-aim');updateOptionButtons()})});
+document.querySelectorAll('.hand-mode-btn').forEach(btn=>{btn.addEventListener('click',()=>{handMode=btn.getAttribute('data-hand');updateOptionButtons();updateJoystickDefaults()})});
+langToggleBtn.addEventListener('click',toggleLanguage);document.getElementById('startLangBtn').addEventListener('click',toggleLanguage);
+
+/* 復活 */
+reviveBtn.addEventListener('click',()=>{const saved=localStorage.getItem('neon_autosave');if(!saved){noSaveHint.classList.remove('hidden');return}try{const data=JSON.parse(saved);applyGameStateData(data);player.hp=Math.floor(player.maxHp*0.5);player.invincibleTimer=5.0;reviveModal.classList.add('hidden');gameOverModal.classList.add('hidden');startGame(true)}catch(e){noSaveHint.classList.remove('hidden')}});
+giveUpBtn.addEventListener('click',()=>{reviveModal.classList.add('hidden');gameOverModal.classList.remove('hidden');document.getElementById('finalScore').innerText=score;document.getElementById('finalKills').innerText=totalKills;localStorage.removeItem('neon_autosave');checkAutoSave()});
+
+/* 初始化 */
+window.onload=()=>{applyLanguage();updateOptionButtons();updateDifficultyButtons();updateJoystickDefaults();checkAutoSave();requestAnimationFrame(gameLoop)};
 </script>
 </body>
 </html>
